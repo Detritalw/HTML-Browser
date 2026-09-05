@@ -145,6 +145,12 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .small{font-size:12px;color:var(--muted);line-height:1.6}
 .checkbox-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .ua-textarea{width:100%;min-height:60px;resize:vertical;font-family:monospace;font-size:12px}
+.settings-drawer{width:min(620px,100vw)}
+.settings-drawer .drawer-body{padding:0;overflow:auto}
+.settings-section{padding:18px 20px;border-bottom:1px solid var(--border)}
+.settings-section h3{display:flex;align-items:center;gap:8px;margin:0 0 4px;font-size:16px}
+.settings-section>p{margin:0 0 14px;color:var(--muted);font-size:12px;line-height:1.5}
+.settings-grid{display:grid;gap:10px}.settings-grid .menu-input-row,.settings-grid .menu-select-row{padding:10px 0}.settings-grid .checkbox-row{padding:8px 0}.settings-actions{display:flex;justify-content:flex-end;gap:8px;padding:16px 20px;background:color-mix(in srgb,var(--bg) 55%,transparent);position:sticky;bottom:0}
 </style>
 </head>
 <body>
@@ -175,32 +181,10 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <button id="copyBtn"></button>
       <button id="sourceBtn"></button>
       <button id="uaBtn"></button>
-      <div class="divider"></div>
       <button id="diagnoseBtn"></button>
       <button id="forceRenderBtn"></button>
-      <div class="menu-input-row">
-        <label for="corsProxy" class="menu-select-label">CORS 代理</label>
-        <input id="corsProxy" placeholder="留空直连，如 https://api.allorigins.win/raw?url=" />
-      </div>
-      <div class="menu-input-row">
-        <label for="corsProxyKey" class="menu-select-label">代理密码</label>
-        <input id="corsProxyKey" type="password" placeholder="无密码留空" />
-      </div>
-      <label class="checkbox-row" style="padding:10px 12px;cursor:pointer">
-        <input type="checkbox" id="proxyModeToggle"/><span id="proxyModeLabel"></span>
-      </label>
-      <label class="checkbox-row" style="padding:10px 12px;cursor:pointer">
-        <input type="checkbox" id="sandboxToggle"/><span id="sandboxLabel"></span>
-      </label>
       <div class="divider"></div>
-      <div class="menu-select-row">
-        <label for="modeSelect" class="menu-select-label">深浅色</label>
-        <select id="modeSelect"><option value="auto">自动</option><option value="light">浅色</option><option value="dark">深色</option></select>
-      </div>
-      <div class="menu-select-row">
-        <label for="accentSelect" class="menu-select-label">主题色</label>
-        <select id="accentSelect"><option value="blue">蓝</option><option value="purple">紫</option><option value="green">绿</option><option value="orange">橙</option><option value="red">红</option></select>
-      </div>
+      <button id="settingsBtn"></button>
     </div>
   </div>
 </div>
@@ -240,6 +224,42 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <div class="row" style="margin:0"><input id="groupNameInput" placeholder="输入新分组名称"/><button class="primary" id="createGroupBtn"></button></div>
     <div class="group-list" id="groupList"></div>
   </div>
+</aside>
+
+<aside class="drawer settings-drawer hidden" id="settingsPanel">
+  <div class="drawer-header"><span id="settingsTitle"></span><button data-close="settingsPanel" class="close-drawer-btn"></button></div>
+  <div class="drawer-body">
+    <section class="settings-section">
+      <h3><img src="https://img.bloret.net/SF/info.circle" class="icon" alt=""/>外观与布局</h3>
+      <p>调整界面主题、强调色和标签页布局。</p>
+      <div class="settings-grid">
+        <div class="menu-select-row"><label for="settingsModeSelect" class="menu-select-label">深浅色</label><select id="settingsModeSelect"><option value="auto">自动</option><option value="light">浅色</option><option value="dark">深色</option></select></div>
+        <div class="menu-select-row"><label for="settingsAccentSelect" class="menu-select-label">主题色</label><select id="settingsAccentSelect"><option value="blue">蓝</option><option value="purple">紫</option><option value="green">绿</option><option value="orange">橙</option><option value="red">红</option></select></div>
+        <label class="checkbox-row"><input type="checkbox" id="settingsVerticalTabs"/><span>垂直显示标签页</span></label>
+        <label class="checkbox-row"><input type="checkbox" id="settingsBookmarkBar"/><span>显示书签栏</span></label>
+      </div>
+    </section>
+    <section class="settings-section">
+      <h3><img src="https://img.bloret.net/SF/network" class="icon" alt=""/>网络与代理</h3>
+      <p>配置跨域代理，用于加载受限制的页面。</p>
+      <div class="settings-grid">
+        <div class="menu-input-row"><label for="settingsCorsProxy" class="menu-select-label">CORS 代理</label><input id="settingsCorsProxy" placeholder="留空直连，如 https://api.allorigins.win/raw?url="/></div>
+        <div class="menu-input-row"><label for="settingsCorsProxyKey" class="menu-select-label">代理密码</label><input id="settingsCorsProxyKey" type="password" placeholder="无密码留空"/></div>
+        <label class="checkbox-row"><input type="checkbox" id="settingsProxyMode"/><span>开启全局代理模式</span></label>
+      </div>
+    </section>
+    <section class="settings-section">
+      <h3><img src="https://img.bloret.net/SF/lock.shield" class="icon" alt=""/>安全与页面</h3>
+      <p>控制嵌入页面的安全策略和辅助操作。</p>
+      <div class="settings-grid"><label class="checkbox-row"><input type="checkbox" id="settingsSandbox"/><span>防跳出模式</span></label><button id="settingsForceRender"></button><button id="settingsDiagnose"></button></div>
+    </section>
+    <section class="settings-section">
+      <h3><img src="https://img.bloret.net/SF/list.bullet" class="icon" alt=""/>数据管理</h3>
+      <p>管理本地保存的浏览记录。</p>
+      <button id="settingsHistory"></button>
+    </section>
+  </div>
+  <div class="settings-actions"><button data-close="settingsPanel">关闭</button></div>
 </aside>
 
 <aside class="drawer hidden" id="historyPanel">
@@ -287,12 +307,12 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <script>
 const $=id=>document.getElementById(id);
 const HOME="about:blank",SEARCH="https://www.bing.com/search?q=",PROBE_API="",ICON_API="https://img.bloret.net/SF",MAX_IFRAMES=20;
-const ICON_MAP={back:{name:"arrow.left"},forward:{name:"arrow.right"},reload:{name:"arrow.clockwise"},home:{name:"house"},go:{name:"arrow.up.forward.square"},source:{name:"rectangle.and.text.magnifyingglass"},copy:{name:"link"},bookmark:{name:"star"},bookmarkFilled:{name:"star.fill"},bookmarkBar:{name:"bookmark"},split:{name:"rectangle.split.2x1"},history:{name:"arrow.counterclockwise.circle"},vnc:{name:"server.rack"},diagnose:{name:"exclamationmark.triangle"},force:{name:"bolt.fill"},proxy:{name:"network"},sandbox:{name:"lock.shield"},add:{name:"plus"},close:{name:"xmark"},retry:{name:"arrow.counterclockwise"},openNew:{name:"square.and.arrow.up"},clear:{name:"trash"},encrypt:{name:"lock.fill"},connect:{name:"play.fill"},info:{name:"info.circle"},list:{name:"list.bullet"},more:{name:"ellipsis"},ua:{name:"person.text.rectangle"},group:{name:"rectangle.3.group"},groupAdd:{name:"rectangle.badge.plus"},vertical:{name:"sidebar.squares.leading"},chevron:{name:"chevron.right"}};
+const ICON_MAP={back:{name:"arrow.left"},forward:{name:"arrow.right"},reload:{name:"arrow.clockwise"},home:{name:"house"},go:{name:"arrow.up.forward.square"},source:{name:"rectangle.and.text.magnifyingglass"},copy:{name:"link"},bookmark:{name:"star"},bookmarkFilled:{name:"star.fill"},bookmarkBar:{name:"bookmark"},split:{name:"rectangle.split.2x1"},history:{name:"arrow.counterclockwise.circle"},vnc:{name:"server.rack"},diagnose:{name:"exclamationmark.triangle"},force:{name:"bolt.fill"},proxy:{name:"network"},sandbox:{name:"lock.shield"},add:{name:"plus"},close:{name:"xmark"},retry:{name:"arrow.counterclockwise"},openNew:{name:"square.and.arrow.up"},clear:{name:"trash"},encrypt:{name:"lock.fill"},connect:{name:"play.fill"},info:{name:"info.circle"},list:{name:"list.bullet"},more:{name:"ellipsis"},ua:{name:"person.text.rectangle"},group:{name:"rectangle.3.group"},groupAdd:{name:"rectangle.badge.plus"},vertical:{name:"sidebar.squares.leading"},gear:{name:"gearshape"},chevron:{name:"chevron.right"}};
 let tabs=[],activeTabId=null,bookmarks=[],globalHistory=[],tabGroups=[],verticalTabs=false;
 const frameContainer=$('frameContainer');
 
 function getIcon(name,useAccent=false){const d=ICON_MAP[name]||{name};let c=useAccent?getComputedStyle(document.documentElement).getPropertyValue('--accent').trim():getComputedStyle(document.documentElement).getPropertyValue('--text').trim();return `<img src="${ICON_API}/${d.name}?color=${encodeURIComponent(c)}" class="icon" alt="" draggable="false"/>`}
-function updateAllIcons(){$('backBtn').innerHTML=getIcon('back')+'后退';$('forwardBtn').innerHTML=getIcon('forward')+'前进';$('reloadBtn').innerHTML=getIcon('reload');$('homeBtn').innerHTML=getIcon('home');$('goBtn').innerHTML=getIcon('go',true);$('bookmarkBtn').innerHTML=getIcon('bookmark')+'添加书签';$('historyBtn').innerHTML=getIcon('history')+'历史记录';$('vncBtn').innerHTML=getIcon('vnc')+'VNC 连接';$('moreBtn').innerHTML=getIcon('more');$('toggleBookmarkBarBtn').innerHTML=getIcon('bookmarkBar')+'切换书签栏';const splitOn=frameContainer.classList.contains('split-view');$('splitBtn').innerHTML=getIcon('split')+(splitOn?'关闭分屏':'开启分屏');$('splitBtn').title=splitOn?'关闭分屏':'开启分屏';$('groupBtn').innerHTML=getIcon('group')+'标签页分组';$('verticalTabsBtn').innerHTML=getIcon('vertical')+(verticalTabs?'关闭垂直标签页':'开启垂直标签页');$('verticalTabsBtn').title=verticalTabs?'关闭垂直标签页':'开启垂直标签页';$('groupTitle').innerHTML=getIcon('group',true)+'标签页分组';$('createGroupBtn').innerHTML=getIcon('groupAdd',true)+'新建分组';$('copyBtn').innerHTML=getIcon('copy')+'复制链接';$('sourceBtn').innerHTML=getIcon('source')+'查看源代码';$('uaBtn').innerHTML=getIcon('ua')+'User-Agent';$('diagnoseBtn').innerHTML=getIcon('diagnose')+'诊断嵌入';$('forceRenderBtn').innerHTML=getIcon('force')+'强制渲染';$('overlayForceRenderBtn').innerHTML=getIcon('force',true)+'强制渲染';$('sandboxLabel').innerHTML=getIcon('sandbox')+'防跳出模式';$('proxyModeLabel').innerHTML=getIcon('proxy')+'全局代理模式';$('addTabBtn').innerHTML=getIcon('add');$('overlayRetryBtn').innerHTML=getIcon('retry')+'重试';$('overlayOpenNewBtn').innerHTML=getIcon('openNew')+'新窗口打开';$('overlayCopyBtn').innerHTML=getIcon('copy')+'复制链接';$('overlayCloseBtn').innerHTML=getIcon('close')+'关闭';$('overlayTitle').innerHTML=getIcon('info',true)+'提示';$('historyTitle').innerHTML=getIcon('history')+'历史记录';$('clearHistoryBtn').innerHTML=getIcon('clear')+'清空';$('vncTitle').innerHTML=getIcon('vnc')+'VNC 连接';$('vncEncryptLabel').innerHTML=getIcon('encrypt')+'强制加密';$('vncConnectBtn').innerHTML=getIcon('connect',true)+'连接 VNC';$('sourceTitle').innerHTML=getIcon('source')+'源代码';$('uaTitle').innerHTML=getIcon('ua')+'User-Agent';$('uaCopyBtn').innerHTML=getIcon('copy')+'复制自定义 UA';$('uaResetBtn').innerHTML=getIcon('reload')+'重置';document.querySelectorAll('.close-drawer-btn').forEach(b=>{b.innerHTML=getIcon('close')});renderTabs();renderBookmarks();updateBookmarkBtn()}
+function updateAllIcons(){$('backBtn').innerHTML=getIcon('back')+'后退';$('forwardBtn').innerHTML=getIcon('forward')+'前进';$('reloadBtn').innerHTML=getIcon('reload');$('homeBtn').innerHTML=getIcon('home');$('goBtn').innerHTML=getIcon('go',true);$('bookmarkBtn').innerHTML=getIcon('bookmark')+'添加书签';$('historyBtn').innerHTML=getIcon('history')+'历史记录';$('vncBtn').innerHTML=getIcon('vnc')+'VNC 连接';$('moreBtn').innerHTML=getIcon('more');$('toggleBookmarkBarBtn').innerHTML=getIcon('bookmarkBar')+'切换书签栏';const splitOn=frameContainer.classList.contains('split-view');$('splitBtn').innerHTML=getIcon('split')+(splitOn?'关闭分屏':'开启分屏');$('splitBtn').title=splitOn?'关闭分屏':'开启分屏';$('groupBtn').innerHTML=getIcon('group')+'标签页分组';$('verticalTabsBtn').innerHTML=getIcon('vertical')+(verticalTabs?'关闭垂直标签页':'开启垂直标签页');$('verticalTabsBtn').title=verticalTabs?'关闭垂直标签页':'开启垂直标签页';$('settingsBtn').innerHTML=getIcon('gear')+'设置';$('settingsTitle').innerHTML=getIcon('gear',true)+'设置';$('settingsForceRender').innerHTML=getIcon('force')+'强制渲染';$('settingsDiagnose').innerHTML=getIcon('diagnose')+'诊断当前页面';$('settingsHistory').innerHTML=getIcon('history')+'打开浏览历史';$('groupTitle').innerHTML=getIcon('group',true)+'标签页分组';$('createGroupBtn').innerHTML=getIcon('groupAdd',true)+'新建分组';$('copyBtn').innerHTML=getIcon('copy')+'复制链接';$('sourceBtn').innerHTML=getIcon('source')+'查看源代码';$('uaBtn').innerHTML=getIcon('ua')+'User-Agent';$('diagnoseBtn').innerHTML=getIcon('diagnose')+'诊断嵌入';$('forceRenderBtn').innerHTML=getIcon('force')+'强制渲染';$('overlayForceRenderBtn').innerHTML=getIcon('force',true)+'强制渲染';$('sandboxLabel').innerHTML=getIcon('sandbox')+'防跳出模式';$('proxyModeLabel').innerHTML=getIcon('proxy')+'全局代理模式';$('addTabBtn').innerHTML=getIcon('add');$('overlayRetryBtn').innerHTML=getIcon('retry')+'重试';$('overlayOpenNewBtn').innerHTML=getIcon('openNew')+'新窗口打开';$('overlayCopyBtn').innerHTML=getIcon('copy')+'复制链接';$('overlayCloseBtn').innerHTML=getIcon('close')+'关闭';$('overlayTitle').innerHTML=getIcon('info',true)+'提示';$('historyTitle').innerHTML=getIcon('history')+'历史记录';$('clearHistoryBtn').innerHTML=getIcon('clear')+'清空';$('vncTitle').innerHTML=getIcon('vnc')+'VNC 连接';$('vncEncryptLabel').innerHTML=getIcon('encrypt')+'强制加密';$('vncConnectBtn').innerHTML=getIcon('connect',true)+'连接 VNC';$('sourceTitle').innerHTML=getIcon('source')+'源代码';$('uaTitle').innerHTML=getIcon('ua')+'User-Agent';$('uaCopyBtn').innerHTML=getIcon('copy')+'复制自定义 UA';$('uaResetBtn').innerHTML=getIcon('reload')+'重置';document.querySelectorAll('.close-drawer-btn').forEach(b=>{b.innerHTML=getIcon('close')});renderTabs();renderBookmarks();updateBookmarkBtn()}
 
 const safeParse=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
 const save=()=>{localStorage.setItem('qwen_tabs',JSON.stringify(tabs));localStorage.setItem('qwen_active_tab',activeTabId);localStorage.setItem('qwen_tab_groups',JSON.stringify(tabGroups));localStorage.setItem('qwen_bookmarks',JSON.stringify(bookmarks));localStorage.setItem('qwen_history',JSON.stringify(globalHistory));localStorage.setItem('qwen_mode',$('modeSelect').value);localStorage.setItem('qwen_accent',$('accentSelect').value);localStorage.setItem('qwen_vnc_base',$('vncBase').value);localStorage.setItem('qwen_vnc_host',$('vncHost').value);localStorage.setItem('qwen_vnc_port',$('vncPort').value);localStorage.setItem('qwen_vnc_path',$('vncPath').value);localStorage.setItem('qwen_vnc_encrypt',$('vncEncrypt').checked?'1':'0');localStorage.setItem('qwen_bookmarkbar_hidden',$('bookmarkBar').classList.contains('hidden')?'1':'0');localStorage.setItem('qwen_sandbox',$('sandboxToggle').checked?'1':'0');localStorage.setItem('qwen_cors_proxy',$('corsProxy').value);localStorage.setItem('qwen_cors_proxy_key',$('corsProxyKey').value);localStorage.setItem('qwen_proxy_mode',$('proxyModeToggle').checked?'1':'0');localStorage.setItem('qwen_split_view',frameContainer.classList.contains('split-view')?'1':'0');localStorage.setItem('qwen_vertical_tabs',verticalTabs?'1':'0')};
@@ -339,7 +359,8 @@ function applyMode(){const mode=$('modeSelect').value;document.documentElement.d
 function applyAccent(){document.documentElement.dataset.accent=$('accentSelect').value;updateAllIcons()}
 function showOverlay(title,desc){$('overlayTitle').innerHTML=getIcon('info',true)+title;$('overlayDesc').textContent=desc;$('overlay').classList.remove('hidden')}
 function hideOverlay(){$('overlay').classList.add('hidden')}
-function openDrawer(id){document.querySelectorAll('.drawer').forEach(d=>d.classList.add('hidden'));$(id).classList.remove('hidden');if(id==='bookmarkPanel')renderBookmarkPanel();if(id==='groupPanel')renderGroupPanel()}
+function syncSettings(){if(!$('settingsPanel'))return;$('settingsModeSelect').value=$('modeSelect').value;$('settingsAccentSelect').value=$('accentSelect').value;$('settingsVerticalTabs').checked=verticalTabs;$('settingsBookmarkBar').checked=!$('bookmarkBar').classList.contains('hidden');$('settingsCorsProxy').value=$('corsProxy').value;$('settingsCorsProxyKey').value=$('corsProxyKey').value;$('settingsProxyMode').checked=$('proxyModeToggle').checked;$('settingsSandbox').checked=$('sandboxToggle').checked}
+function openDrawer(id){document.querySelectorAll('.drawer').forEach(d=>d.classList.add('hidden'));$(id).classList.remove('hidden');if(id==='bookmarkPanel')renderBookmarkPanel();if(id==='groupPanel')renderGroupPanel();if(id==='settingsPanel')syncSettings()}
 function closeDrawer(id){$(id).classList.add('hidden')}
 
 async function viewSource(){const tab=getActiveTab();if(!tab||tab.url===HOME){toast('无源代码');return}openDrawer('sourcePanel');$('sourceCode').textContent='加载中...\n'+tab.url;try{const r=await fetch(tab.url,{cache:'no-store'});$('sourceCode').textContent=await r.text()}catch(e){$('sourceCode').textContent='无法获取：跨域/登录/反爬限制。\n\n'+String(e)}}
@@ -375,6 +396,14 @@ function init(){
   $('splitBtn').onclick=toggleSplit;
   $('groupBtn').onclick=()=>openDrawer('groupPanel');
   $('verticalTabsBtn').onclick=()=>{verticalTabs=!verticalTabs;applyVerticalTabs()};
+  $('settingsBtn').onclick=()=>openDrawer('settingsPanel');
+  $('settingsModeSelect').onchange=e=>{$('modeSelect').value=e.target.value;applyMode();save()};
+  $('settingsAccentSelect').onchange=e=>{$('accentSelect').value=e.target.value;applyAccent();save()};
+  $('settingsVerticalTabs').onchange=e=>{verticalTabs=e.target.checked;applyVerticalTabs()};
+  $('settingsBookmarkBar').onchange=()=>{$('bookmarkBar').classList.toggle('hidden',!$('settingsBookmarkBar').checked);save()};
+  $('settingsCorsProxy').oninput=e=>{$('corsProxy').value=e.target.value;save()};$('settingsCorsProxyKey').oninput=e=>{$('corsProxyKey').value=e.target.value;save()};$('settingsProxyMode').onchange=e=>{$('proxyModeToggle').checked=e.target.checked;save()};
+  $('settingsSandbox').onchange=e=>{$('sandboxToggle').checked=e.target.checked;applySandbox();save();reload()};
+  $('settingsForceRender').onclick=forceRender;$('settingsDiagnose').onclick=diagnoseCurrent;$('settingsHistory').onclick=()=>openDrawer('historyPanel');
   $('createGroupBtn').onclick=createGroup;
   $('groupNameInput').onkeydown=e=>{if(e.key==='Enter')createGroup()};
   document.addEventListener('click',e=>{
