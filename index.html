@@ -105,6 +105,19 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .list-item .content{flex:1;min-width:0}
 .list-item .title{font-weight:650;margin-bottom:4px;word-break:break-all}
 .list-item .meta{color:var(--muted);font-size:12px;word-break:break-all}
+.bookmark-drawer{width:min(570px,100vw)}
+.bookmark-drawer .drawer-body{display:flex;flex-direction:column;gap:12px;padding:14px}
+.bookmark-search{width:100%;font-size:15px;padding:12px 14px;border-radius:999px}
+.bookmark-list{flex:1;overflow:auto;padding:2px}
+.bookmark-list .list-item{display:flex;align-items:center;margin-bottom:8px;padding:11px 12px}
+.bookmark-list .bookmark-icon{width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;background:var(--accent-soft);color:var(--accent);flex-shrink:0}
+.bookmark-list .bookmark-icon .icon{width:19px;height:19px;margin:0}
+.bookmark-list .bookmark-url{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bookmark-list .remove-bookmark{margin-left:auto;padding:6px;border:0;background:transparent;color:var(--danger);flex-shrink:0}
+.bookmark-list .remove-bookmark:hover{background:color-mix(in srgb,var(--danger) 14%,transparent);color:var(--danger)}
+.bookmark-empty{display:grid;place-items:center;min-height:180px;color:var(--muted);text-align:center;border:1px dashed var(--border);border-radius:14px;padding:24px}
+.bookmark-add-current{width:100%;justify-content:center;padding:11px 14px}
+@media (max-width:640px){.bookmark-drawer{width:100vw}}
 .form-grid{display:grid;gap:10px}.form-grid label{font-size:13px;color:var(--muted);margin-bottom:4px;display:block}.form-grid input,.form-grid textarea{width:100%}
 .hidden{display:none!important}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:999px;box-shadow:var(--shadow);padding:10px 16px;z-index:99999;display:flex;align-items:center;gap:8px}
@@ -130,6 +143,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <button id="moreBtn" title="更多功能"></button>
     <div class="more-menu" id="moreMenu">
       <button id="bookmarkBtn"></button>
+      <button id="bookmarkPanelBtn"></button>
       <button id="historyBtn"></button>
       <button id="vncBtn"></button>
       <div class="divider"></div>
@@ -186,6 +200,15 @@ button:disabled{opacity:.45;cursor:not-allowed}
     </div>
   </div>
 </div>
+
+<aside class="drawer bookmark-drawer hidden" id="bookmarkPanel">
+  <div class="drawer-header"><span id="bookmarkTitle"></span><button data-close="bookmarkPanel" class="close-drawer-btn"></button></div>
+  <div class="drawer-body">
+    <input class="bookmark-search" id="bookmarkSearch" type="search" placeholder="搜索书签" autocomplete="off"/>
+    <div class="bookmark-list" id="bookmarkList"></div>
+    <button class="primary bookmark-add-current" id="bookmarkAddCurrentBtn"></button>
+  </div>
+</aside>
 
 <aside class="drawer hidden" id="historyPanel">
   <div class="drawer-header"><span id="historyTitle"></span><div class="row" style="margin:0"><button id="clearHistoryBtn"></button><button data-close="historyPanel" class="close-drawer-btn"></button></div></div>
@@ -272,15 +295,16 @@ function updateNavButtons(){const tab=getActiveTab();$('backBtn').disabled=!tab|
 
 function addGlobalHistory(url){if(!url||url===HOME)return;globalHistory.unshift({url,title:getUrlTitle(url),time:new Date().toLocaleString()});globalHistory=globalHistory.slice(0,500);save();renderHistory()}
 function toggleBookmark(){const tab=getActiveTab();if(!tab||tab.url===HOME){toast('无法加入书签');return}const i=bookmarks.findIndex(b=>b.url===tab.url);if(i>=0){bookmarks.splice(i,1);toast('已移除书签')}else{bookmarks.unshift({url:tab.url,title:tab.title});toast('已添加书签')}save();renderBookmarks();updateBookmarkBtn()}
-function updateBookmarkBtn(){const tab=getActiveTab();const has=tab&&bookmarks.some(b=>b.url===tab.url);$('bookmarkBtn').innerHTML=has?getIcon('bookmarkFilled',true)+'移除书签':getIcon('bookmark')+'添加书签';$('bookmarkBtn').title=has?'移除书签':'添加书签'}
-function renderBookmarks(){const bar=$('bookmarkBar');bar.innerHTML='';if(!bookmarks.length){bar.innerHTML=`<span class="small">${getIcon('info')} 暂无书签</span>`;return}bookmarks.forEach((b,i)=>{const el=document.createElement('span');el.className='bookmark-item';el.innerHTML=`${getIcon('bookmarkFilled',true)}<span>${b.title||b.url}</span><span class="remove">${getIcon('close')}</span>`;el.onclick=()=>navigate(b.url);el.querySelector('.remove').onclick=e=>{e.stopPropagation();bookmarks.splice(i,1);save();renderBookmarks();updateBookmarkBtn()};bar.appendChild(el)})}
+function updateBookmarkBtn(){const tab=getActiveTab();const has=tab&&bookmarks.some(b=>b.url===tab.url);$('bookmarkBtn').innerHTML=has?getIcon('bookmarkFilled',true)+'移除书签':getIcon('bookmark')+'添加书签';$('bookmarkPanelBtn').innerHTML=getIcon('bookmarkBar')+'打开书签边栏';$('bookmarkBtn').title=has?'移除书签':'添加书签';$('bookmarkTitle').innerHTML=getIcon('bookmark',true)+'书签';$('bookmarkAddCurrentBtn').innerHTML=has?getIcon('bookmarkFilled',true)+'移除当前标签页':getIcon('bookmark',true)+'添加当前标签页'}
+function renderBookmarks(){const bar=$('bookmarkBar');bar.innerHTML='';if(!bookmarks.length){bar.innerHTML=`<span class="small">${getIcon('info')} 暂无书签</span>`;return}bookmarks.forEach((b,i)=>{const el=document.createElement('span');el.className='bookmark-item';el.innerHTML=`${getIcon('bookmarkFilled',true)}<span>${b.title||b.url}</span><span class="remove">${getIcon('close')}</span>`;el.onclick=()=>navigate(b.url);el.querySelector('.remove').onclick=e=>{e.stopPropagation();bookmarks.splice(i,1);save();renderBookmarks();updateBookmarkBtn();renderBookmarkPanel()};bar.appendChild(el)});renderBookmarkPanel()}
+function renderBookmarkPanel(){const list=$('bookmarkList');if(!list)return;const query=($('bookmarkSearch')?.value||'').trim().toLowerCase();list.innerHTML='';const filtered=bookmarks.filter(b=>`${b.title||''} ${b.url||''}`.toLowerCase().includes(query));if(!filtered.length){list.innerHTML=`<div class="bookmark-empty">${getIcon('bookmark')}<div>${query?'没有匹配的书签':'暂无书签'}</div></div>`;return}filtered.forEach(b=>{const el=document.createElement('div');el.className='list-item';el.innerHTML=`<span class="bookmark-icon">${getIcon('bookmarkFilled',true)}</span><div class="content"><div class="title">${b.title||'未命名书签'}</div><div class="meta bookmark-url">${b.url}</div></div><button class="remove-bookmark" title="删除书签">${getIcon('close')}</button>`;el.onclick=()=>{navigate(b.url);closeDrawer('bookmarkPanel')};el.querySelector('.remove-bookmark').onclick=e=>{e.stopPropagation();const i=bookmarks.indexOf(b);if(i>=0)bookmarks.splice(i,1);save();renderBookmarks();updateBookmarkBtn()};list.appendChild(el)})}
 function renderHistory(){const list=$('historyList');list.innerHTML='';if(!globalHistory.length){list.innerHTML=`<div class="small">${getIcon('info')} 暂无历史</div>`;return}globalHistory.forEach(h=>{const el=document.createElement('div');el.className='list-item';el.innerHTML=`${getIcon('list')}<div class="content"><div class="title">${h.title}</div><div class="meta">${h.time}\n${h.url}</div></div>`;el.onclick=()=>{navigate(h.url);closeDrawer('historyPanel')};list.appendChild(el)})}
 
 function applyMode(){const mode=$('modeSelect').value;document.documentElement.dataset.mode=mode;if(mode==='auto')document.documentElement.dataset.mode=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';updateAllIcons()}
 function applyAccent(){document.documentElement.dataset.accent=$('accentSelect').value;updateAllIcons()}
 function showOverlay(title,desc){$('overlayTitle').innerHTML=getIcon('info',true)+title;$('overlayDesc').textContent=desc;$('overlay').classList.remove('hidden')}
 function hideOverlay(){$('overlay').classList.add('hidden')}
-function openDrawer(id){document.querySelectorAll('.drawer').forEach(d=>d.classList.add('hidden'));$(id).classList.remove('hidden')}
+function openDrawer(id){document.querySelectorAll('.drawer').forEach(d=>d.classList.add('hidden'));$(id).classList.remove('hidden');if(id==='bookmarkPanel')renderBookmarkPanel()}
 function closeDrawer(id){$(id).classList.add('hidden')}
 
 async function viewSource(){const tab=getActiveTab();if(!tab||tab.url===HOME){toast('无源代码');return}openDrawer('sourcePanel');$('sourceCode').textContent='加载中...\n'+tab.url;try{const r=await fetch(tab.url,{cache:'no-store'});$('sourceCode').textContent=await r.text()}catch(e){$('sourceCode').textContent='无法获取：跨域/登录/反爬限制。\n\n'+String(e)}}
@@ -326,12 +350,15 @@ function init(){
   $('homeBtn').onclick=()=>navigate(HOME);
   $('copyBtn').onclick=async()=>{const t=getActiveTab();if(t){try{await navigator.clipboard.writeText(t.url);toast('已复制')}catch{window.prompt('复制',t.url)}}};
   $('bookmarkBtn').onclick=toggleBookmark;
+  $('bookmarkSearch').oninput=renderBookmarkPanel;
+  $('bookmarkAddCurrentBtn').onclick=()=>{toggleBookmark();renderBookmarkPanel()};
   $('toggleBookmarkBarBtn').onclick=()=>{$('bookmarkBar').classList.toggle('hidden');save()};
   $('sourceBtn').onclick=viewSource;
   $('uaBtn').onclick=()=>{initUAPanel();openDrawer('uaPanel')};
   $('uaCopyBtn').onclick=copyCustomUA;
   $('uaResetBtn').onclick=()=>{$('uaCustom').value=navigator.userAgent;localStorage.removeItem('qwen_custom_ua');toast('已重置')};
   $('uaCustom').addEventListener('input',()=>localStorage.setItem('qwen_custom_ua',$('uaCustom').value));
+  $('bookmarkPanelBtn').onclick=()=>openDrawer('bookmarkPanel');
   $('historyBtn').onclick=()=>openDrawer('historyPanel');
   $('vncBtn').onclick=()=>openDrawer('vncPanel');
   $('diagnoseBtn').onclick=diagnoseCurrent;
