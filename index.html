@@ -151,6 +151,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .settings-section h3{display:flex;align-items:center;gap:8px;margin:0 0 4px;font-size:16px}
 .settings-section>p{margin:0 0 14px;color:var(--muted);font-size:12px;line-height:1.5}
 .settings-grid{display:grid;gap:10px}.settings-grid .menu-input-row,.settings-grid .menu-select-row{padding:10px 0}.settings-grid .checkbox-row{padding:8px 0}.settings-actions{display:flex;justify-content:flex-end;gap:8px;padding:16px 20px;background:color-mix(in srgb,var(--bg) 55%,transparent);position:sticky;bottom:0}
+.hide-now-btn{font-weight:800;letter-spacing:.04em}.hide-now-btn .icon{width:19px;height:19px}.hide-screen{position:fixed;inset:0;z-index:100000;background:#111;display:flex;align-items:center;justify-content:center;cursor:default}.hide-screen.hidden{display:none!important}.hide-screen-image{width:100%;height:100%;object-fit:cover}.hide-screen-solid{width:100%;height:100%;background:#111}.hide-password{position:absolute;width:min(360px,calc(100% - 32px));padding:20px;background:color-mix(in srgb,#111 88%,transparent);border:1px solid rgba(255,255,255,.2);border-radius:16px;box-shadow:0 16px 60px rgba(0,0,0,.55);color:#fff}.hide-password h2{margin:0 0 12px;font-size:18px}.hide-password{display:grid;gap:10px}.hide-password form{display:flex;gap:8px}.hide-password input{flex:1;min-width:0;background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.25);color:#fff}.hide-password .error{min-height:18px;margin-top:8px;color:#ff8d8d;font-size:12px}
 </style>
 </head>
 <body>
@@ -158,6 +159,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <div class="tabs" id="tabsContainer"><div class="tab-add" id="addTabBtn" title="新建标签页"></div></div>
 
 <div class="topbar">
+  <button class="hide-now-btn" id="hideNowBtn" title="隐藏页面"></button>
   <button id="backBtn" title="后退"></button>
   <button id="forwardBtn" title="前进"></button>
   <button id="reloadBtn" title="刷新"></button>
@@ -255,6 +257,15 @@ button:disabled{opacity:.45;cursor:not-allowed}
       </div>
     </section>
     <section class="settings-section">
+      <h3><img src="https://img.bloret.net/SF/lock.fill" class="icon" alt=""/>隐藏与密码</h3>
+      <p>设置 HIDENOW 的遮罩样式和解锁密码。默认密码为 1234。</p>
+      <div class="settings-grid">
+        <div class="menu-select-row"><label for="settingsHideMode" class="menu-select-label">遮罩类型</label><select id="settingsHideMode"><option value="image">图片</option><option value="solid">纯色</option></select></div>
+        <div class="menu-input-row"><label for="settingsHideImage" class="menu-select-label">遮罩图片</label><input id="settingsHideImage" type="url" placeholder="图片 URL"/></div>
+        <div class="menu-input-row"><label for="settingsHidePassword" class="menu-select-label">解锁密码</label><input id="settingsHidePassword" type="password" placeholder="留空使用默认密码"/></div>
+      </div>
+    </section>
+    <section class="settings-section">
       <h3><img src="https://img.bloret.net/SF/lock.shield" class="icon" alt=""/>安全与页面</h3>
       <p>控制嵌入页面的安全策略和辅助操作。</p>
       <div class="settings-grid"><label class="checkbox-row"><input type="checkbox" id="settingsSandbox"/><span>防跳出模式</span></label><button id="settingsForceRender"></button><button id="settingsDiagnose"></button></div>
@@ -309,16 +320,27 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </aside>
 
 <div class="toast hidden" id="toast"></div>
+<div class="hide-screen hidden" id="hideScreen" aria-hidden="true">
+  <img class="hide-screen-image hidden" id="hideScreenImage" alt=""/>
+  <div class="hide-screen-solid hidden" id="hideScreenSolid"></div>
+  <div class="hide-password hidden" id="hidePasswordForm">
+    <h2>输入密码以恢复页面</h2>
+    <form id="hidePasswordFormInner"><input id="hidePasswordInput" type="password" autocomplete="current-password" placeholder="密码"/><button class="primary" type="submit">解锁</button></form>
+    <div class="error" id="hidePasswordError"></div>
+  </div>
+</div>
 
 <script>
 const $=id=>document.getElementById(id);
 const HOME="about:blank",SEARCH="https://www.bing.com/search?q=",PROBE_API="",ICON_API="https://img.bloret.net/SF",MAX_IFRAMES=20;
-const ICON_MAP={back:{name:"arrow.left"},forward:{name:"arrow.right"},reload:{name:"arrow.clockwise"},home:{name:"house"},go:{name:"arrow.up.forward.square"},source:{name:"rectangle.and.text.magnifyingglass"},copy:{name:"link"},bookmark:{name:"star"},bookmarkFilled:{name:"star.fill"},bookmarkBar:{name:"bookmark"},split:{name:"rectangle.split.2x1"},history:{name:"arrow.counterclockwise.circle"},vnc:{name:"server.rack"},diagnose:{name:"exclamationmark.triangle"},force:{name:"bolt.fill"},proxy:{name:"network"},sandbox:{name:"lock.shield"},add:{name:"plus"},close:{name:"xmark"},retry:{name:"arrow.counterclockwise"},openNew:{name:"square.and.arrow.up"},clear:{name:"trash"},encrypt:{name:"lock.fill"},connect:{name:"play.fill"},info:{name:"info.circle"},list:{name:"list.bullet"},more:{name:"ellipsis"},ua:{name:"person.text.rectangle"},group:{name:"rectangle.3.group"},groupAdd:{name:"rectangle.badge.plus"},vertical:{name:"sidebar.squares.leading"},gear:{name:"gearshape"},chevron:{name:"chevron.right"}};
+const ICON_MAP={back:{name:"arrow.left"},forward:{name:"arrow.right"},reload:{name:"arrow.clockwise"},home:{name:"house"},go:{name:"arrow.up.forward.square"},source:{name:"rectangle.and.text.magnifyingglass"},copy:{name:"link"},bookmark:{name:"star"},bookmarkFilled:{name:"star.fill"},bookmarkBar:{name:"bookmark"},split:{name:"rectangle.split.2x1"},history:{name:"arrow.counterclockwise.circle"},vnc:{name:"server.rack"},diagnose:{name:"exclamationmark.triangle"},force:{name:"bolt.fill"},proxy:{name:"network"},sandbox:{name:"lock.shield"},add:{name:"plus"},close:{name:"xmark"},retry:{name:"arrow.counterclockwise"},openNew:{name:"square.and.arrow.up"},clear:{name:"trash"},encrypt:{name:"lock.fill"},connect:{name:"play.fill"},info:{name:"info.circle"},list:{name:"list.bullet"},more:{name:"ellipsis"},ua:{name:"person.text.rectangle"},hide:{name:"eye.slash"},paint:{name:"paintpalette"},photo:{name:"photo"},group:{name:"rectangle.3.group"},groupAdd:{name:"rectangle.badge.plus"},vertical:{name:"sidebar.squares.leading"},gear:{name:"gearshape"},chevron:{name:"chevron.right"}};
 let tabs=[],activeTabId=null,bookmarks=[],globalHistory=[],tabGroups=[],verticalTabs=false;
 const frameContainer=$('frameContainer');
 
+const DEFAULT_HIDE_IMAGE='https://img.bloret.net/img/1788607858835/b9692d328d634464dd5f9e369c9840aa';
+let hideLocked=false,hideClickCount=0,hideClickTimer=null;
 function getIcon(name,useAccent=false){const d=ICON_MAP[name]||{name};let c=useAccent?getComputedStyle(document.documentElement).getPropertyValue('--accent').trim():getComputedStyle(document.documentElement).getPropertyValue('--text').trim();return `<img src="${ICON_API}/${d.name}?color=${encodeURIComponent(c)}" class="icon" alt="" draggable="false"/>`}
-function updateAllIcons(){$('backBtn').innerHTML=getIcon('back')+'后退';$('forwardBtn').innerHTML=getIcon('forward')+'前进';$('reloadBtn').innerHTML=getIcon('reload');$('homeBtn').innerHTML=getIcon('home');$('goBtn').innerHTML=getIcon('go',true);$('bookmarkBtn').innerHTML=getIcon('bookmark')+'添加书签';$('historyBtn').innerHTML=getIcon('history')+'历史记录';$('vncBtn').innerHTML=getIcon('vnc')+'VNC 连接';$('moreBtn').innerHTML=getIcon('more');$('toggleBookmarkBarBtn').innerHTML=getIcon('bookmarkBar')+'切换书签栏';const splitOn=frameContainer.classList.contains('split-view');$('splitBtn').innerHTML=getIcon('split')+(splitOn?'关闭分屏':'开启分屏');$('splitBtn').title=splitOn?'关闭分屏':'开启分屏';$('groupBtn').innerHTML=getIcon('group')+'标签页分组';$('verticalTabsBtn').innerHTML=getIcon('vertical')+(verticalTabs?'关闭垂直标签页':'开启垂直标签页');$('verticalTabsBtn').title=verticalTabs?'关闭垂直标签页':'开启垂直标签页';$('settingsBtn').innerHTML=getIcon('gear')+'设置';$('settingsTitle').innerHTML=getIcon('gear',true)+'设置';$('settingsForceRender').innerHTML=getIcon('force')+'强制渲染';$('settingsDiagnose').innerHTML=getIcon('diagnose')+'诊断当前页面';$('settingsHistory').innerHTML=getIcon('history')+'打开浏览历史';$('groupTitle').innerHTML=getIcon('group',true)+'标签页分组';$('createGroupBtn').innerHTML=getIcon('groupAdd',true)+'新建分组';$('copyBtn').innerHTML=getIcon('copy')+'复制链接';$('sourceBtn').innerHTML=getIcon('source')+'查看源代码';$('uaBtn').innerHTML=getIcon('ua')+'User-Agent';$('diagnoseBtn').innerHTML=getIcon('diagnose')+'诊断嵌入';$('forceRenderBtn').innerHTML=getIcon('force')+'强制渲染';$('overlayForceRenderBtn').innerHTML=getIcon('force',true)+'强制渲染';$('sandboxLabel').innerHTML=getIcon('sandbox')+'防跳出模式';$('proxyModeLabel').innerHTML=getIcon('proxy')+'全局代理模式';$('addTabBtn').innerHTML=getIcon('add');$('overlayRetryBtn').innerHTML=getIcon('retry')+'重试';$('overlayOpenNewBtn').innerHTML=getIcon('openNew')+'新窗口打开';$('overlayCopyBtn').innerHTML=getIcon('copy')+'复制链接';$('overlayCloseBtn').innerHTML=getIcon('close')+'关闭';$('overlayTitle').innerHTML=getIcon('info',true)+'提示';$('historyTitle').innerHTML=getIcon('history')+'历史记录';$('clearHistoryBtn').innerHTML=getIcon('clear')+'清空';$('vncTitle').innerHTML=getIcon('vnc')+'VNC 连接';$('vncEncryptLabel').innerHTML=getIcon('encrypt')+'强制加密';$('vncConnectBtn').innerHTML=getIcon('connect',true)+'连接 VNC';$('sourceTitle').innerHTML=getIcon('source')+'源代码';$('uaTitle').innerHTML=getIcon('ua')+'User-Agent';$('uaCopyBtn').innerHTML=getIcon('copy')+'复制自定义 UA';$('uaResetBtn').innerHTML=getIcon('reload')+'重置';document.querySelectorAll('.close-drawer-btn').forEach(b=>{b.innerHTML=getIcon('close')});renderTabs();renderBookmarks();updateBookmarkBtn()}
+function updateAllIcons(){$('hideNowBtn').innerHTML=getIcon('hide')+'HIDENOW';$('backBtn').innerHTML=getIcon('back')+'后退';$('forwardBtn').innerHTML=getIcon('forward')+'前进';$('reloadBtn').innerHTML=getIcon('reload');$('homeBtn').innerHTML=getIcon('home');$('goBtn').innerHTML=getIcon('go',true);$('bookmarkBtn').innerHTML=getIcon('bookmark')+'添加书签';$('historyBtn').innerHTML=getIcon('history')+'历史记录';$('vncBtn').innerHTML=getIcon('vnc')+'VNC 连接';$('moreBtn').innerHTML=getIcon('more');$('toggleBookmarkBarBtn').innerHTML=getIcon('bookmarkBar')+'切换书签栏';const splitOn=frameContainer.classList.contains('split-view');$('splitBtn').innerHTML=getIcon('split')+(splitOn?'关闭分屏':'开启分屏');$('splitBtn').title=splitOn?'关闭分屏':'开启分屏';$('groupBtn').innerHTML=getIcon('group')+'标签页分组';$('verticalTabsBtn').innerHTML=getIcon('vertical')+(verticalTabs?'关闭垂直标签页':'开启垂直标签页');$('verticalTabsBtn').title=verticalTabs?'关闭垂直标签页':'开启垂直标签页';$('settingsBtn').innerHTML=getIcon('gear')+'设置';$('settingsTitle').innerHTML=getIcon('gear',true)+'设置';$('settingsForceRender').innerHTML=getIcon('force')+'强制渲染';$('settingsDiagnose').innerHTML=getIcon('diagnose')+'诊断当前页面';$('settingsHistory').innerHTML=getIcon('history')+'打开浏览历史';$('groupTitle').innerHTML=getIcon('group',true)+'标签页分组';$('createGroupBtn').innerHTML=getIcon('groupAdd',true)+'新建分组';$('copyBtn').innerHTML=getIcon('copy')+'复制链接';$('sourceBtn').innerHTML=getIcon('source')+'查看源代码';$('uaBtn').innerHTML=getIcon('ua')+'User-Agent';$('diagnoseBtn').innerHTML=getIcon('diagnose')+'诊断嵌入';$('forceRenderBtn').innerHTML=getIcon('force')+'强制渲染';$('overlayForceRenderBtn').innerHTML=getIcon('force',true)+'强制渲染';$('sandboxLabel').innerHTML=getIcon('sandbox')+'防跳出模式';$('proxyModeLabel').innerHTML=getIcon('proxy')+'全局代理模式';$('addTabBtn').innerHTML=getIcon('add');$('overlayRetryBtn').innerHTML=getIcon('retry')+'重试';$('overlayOpenNewBtn').innerHTML=getIcon('openNew')+'新窗口打开';$('overlayCopyBtn').innerHTML=getIcon('copy')+'复制链接';$('overlayCloseBtn').innerHTML=getIcon('close')+'关闭';$('overlayTitle').innerHTML=getIcon('info',true)+'提示';$('historyTitle').innerHTML=getIcon('history')+'历史记录';$('clearHistoryBtn').innerHTML=getIcon('clear')+'清空';$('vncTitle').innerHTML=getIcon('vnc')+'VNC 连接';$('vncEncryptLabel').innerHTML=getIcon('encrypt')+'强制加密';$('vncConnectBtn').innerHTML=getIcon('connect',true)+'连接 VNC';$('sourceTitle').innerHTML=getIcon('source')+'源代码';$('uaTitle').innerHTML=getIcon('ua')+'User-Agent';$('uaCopyBtn').innerHTML=getIcon('copy')+'复制自定义 UA';$('uaResetBtn').innerHTML=getIcon('reload')+'重置';document.querySelectorAll('.close-drawer-btn').forEach(b=>{b.innerHTML=getIcon('close')});renderTabs();renderBookmarks();updateBookmarkBtn()}
 
 const safeParse=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
 const save=()=>{localStorage.setItem('qwen_tabs',JSON.stringify(tabs));localStorage.setItem('qwen_active_tab',activeTabId);localStorage.setItem('qwen_tab_groups',JSON.stringify(tabGroups));localStorage.setItem('qwen_bookmarks',JSON.stringify(bookmarks));localStorage.setItem('qwen_history',JSON.stringify(globalHistory));localStorage.setItem('qwen_mode',$('modeSelect').value);localStorage.setItem('qwen_accent',$('accentSelect').value);localStorage.setItem('qwen_vnc_base',$('vncBase').value);localStorage.setItem('qwen_vnc_host',$('vncHost').value);localStorage.setItem('qwen_vnc_port',$('vncPort').value);localStorage.setItem('qwen_vnc_path',$('vncPath').value);localStorage.setItem('qwen_vnc_encrypt',$('vncEncrypt').checked?'1':'0');localStorage.setItem('qwen_bookmarkbar_hidden',$('bookmarkBar').classList.contains('hidden')?'1':'0');localStorage.setItem('qwen_sandbox',$('sandboxToggle').checked?'1':'0');localStorage.setItem('qwen_cors_proxy',$('corsProxy').value);localStorage.setItem('qwen_cors_proxy_key',$('corsProxyKey').value);localStorage.setItem('qwen_proxy_mode',$('proxyModeToggle').checked?'1':'0');localStorage.setItem('qwen_split_view',frameContainer.classList.contains('split-view')?'1':'0');localStorage.setItem('qwen_vertical_tabs',verticalTabs?'1':'0')};
@@ -365,7 +387,12 @@ function applyMode(){const mode=$('modeSelect').value;document.documentElement.d
 function applyAccent(){document.documentElement.dataset.accent=$('accentSelect').value;updateAllIcons()}
 function showOverlay(title,desc){$('overlayTitle').innerHTML=getIcon('info',true)+title;$('overlayDesc').textContent=desc;$('overlay').classList.remove('hidden')}
 function hideOverlay(){$('overlay').classList.add('hidden')}
-function syncSettings(){if(!$('settingsPanel'))return;$('settingsModeSelect').value=$('modeSelect').value;$('settingsAccentSelect').value=$('accentSelect').value;$('settingsVerticalTabs').checked=verticalTabs;$('settingsBookmarkBar').checked=!$('bookmarkBar').classList.contains('hidden');$('settingsCorsProxy').value=$('corsProxy').value;$('settingsCorsProxyKey').value=$('corsProxyKey').value;$('settingsProxyMode').checked=$('proxyModeToggle').checked;$('settingsSandbox').checked=$('sandboxToggle').checked}
+function applyHideScreen(){const image=(localStorage.getItem('qwen_hide_image')||$('settingsHideImage')?.value||DEFAULT_HIDE_IMAGE).trim();const mode=localStorage.getItem('qwen_hide_mode')||$('settingsHideMode')?.value||'image';$('hideScreenImage').classList.toggle('hidden',mode!=='image');$('hideScreenSolid').classList.toggle('hidden',mode!=='solid');$('hideScreenImage').src=image||DEFAULT_HIDE_IMAGE}
+function lockScreen(){hideLocked=true;hideClickCount=0;$('hideScreen').classList.remove('hidden');$('hideScreen').setAttribute('aria-hidden','false');$('hidePasswordForm').classList.add('hidden');applyHideScreen()}
+function unlockScreen(){hideLocked=false;hideClickCount=0;$('hideScreen').classList.add('hidden');$('hideScreen').setAttribute('aria-hidden','true');$('hidePasswordInput').value='';$('hidePasswordError').textContent=''}
+function requestUnlock(){hideClickCount++;clearTimeout(hideClickTimer);hideClickTimer=setTimeout(()=>hideClickCount=0,900);if(hideClickCount>=3){hideClickCount=0;$('hidePasswordForm').classList.remove('hidden');$('hidePasswordInput').focus()}}
+function handleUnlock(e){e.preventDefault();const expected=localStorage.getItem('qwen_hide_password')||'1234';if($('hidePasswordInput').value===expected)unlockScreen();else{$('hidePasswordError').textContent='密码错误';$('hidePasswordInput').select()}}
+function syncSettings(){if(!$('settingsPanel'))return;$('settingsModeSelect').value=$('modeSelect').value;$('settingsAccentSelect').value=$('accentSelect').value;$('settingsVerticalTabs').checked=verticalTabs;$('settingsBookmarkBar').checked=!$('bookmarkBar').classList.contains('hidden');$('settingsCorsProxy').value=$('corsProxy').value;$('settingsCorsProxyKey').value=$('corsProxyKey').value;$('settingsHideMode').value=localStorage.getItem('qwen_hide_mode')||'image';$('settingsHideImage').value=localStorage.getItem('qwen_hide_image')||DEFAULT_HIDE_IMAGE;$('settingsHidePassword').value=localStorage.getItem('qwen_hide_password')||'';$('settingsProxyMode').checked=$('proxyModeToggle').checked;$('settingsSandbox').checked=$('sandboxToggle').checked}
 function openDrawer(id){document.querySelectorAll('.drawer').forEach(d=>d.classList.add('hidden'));$(id).classList.remove('hidden');if(id==='bookmarkPanel')renderBookmarkPanel();if(id==='groupPanel')renderGroupPanel();if(id==='settingsPanel')syncSettings()}
 function closeDrawer(id){$(id).classList.add('hidden')}
 
@@ -393,9 +420,10 @@ function init(){
   $('corsProxyKey').value=localStorage.getItem('qwen_cors_proxy_key')||'';
   $('proxyModeToggle').checked=localStorage.getItem('qwen_proxy_mode')==='1';
   verticalTabs=localStorage.getItem('qwen_vertical_tabs')==='1';
-  applyMode();applyAccent();renderBookmarks();renderHistory();initUAPanel();
+  applyMode();applyAccent();renderBookmarks();renderHistory();initUAPanel();applyHideScreen();
   if(tabs.length===0){createTab()}else{if(!tabs.find(t=>t.id===activeTabId))activeTabId=tabs[0].id;tabs.forEach(t=>{if(!getFrameEl(t.id))createFrameEl(t)});renderTabs();switchTab(activeTabId)}
   if(localStorage.getItem('qwen_split_view')==='1'&&tabs.length>1)toggleSplit();
+  lockScreen();
 
   // 修复：点击外部关闭菜单，使用正确的 ID
   $('moreBtn').onclick=e=>{e.stopPropagation();$('moreMenu').classList.toggle('show')};
@@ -409,6 +437,8 @@ function init(){
   $('settingsBookmarkBar').onchange=()=>{$('bookmarkBar').classList.toggle('hidden',!$('settingsBookmarkBar').checked);save()};
   $('settingsCorsProxy').oninput=e=>{$('corsProxy').value=e.target.value;save()};$('settingsCorsProxyKey').oninput=e=>{$('corsProxyKey').value=e.target.value;save()};$('settingsProxyMode').onchange=e=>{$('proxyModeToggle').checked=e.target.checked;save()};
   $('settingsSandbox').onchange=e=>{$('sandboxToggle').checked=e.target.checked;applySandbox();save();reload()};
+  $('settingsHideMode').onchange=()=>{localStorage.setItem('qwen_hide_mode',$('settingsHideMode').value);applyHideScreen();save()};$('settingsHideImage').oninput=()=>{localStorage.setItem('qwen_hide_image',$('settingsHideImage').value);applyHideScreen();save()};$('settingsHidePassword').oninput=e=>{localStorage.setItem('qwen_hide_password',e.target.value||'1234')};
+  $('hideNowBtn').onclick=lockScreen;$('hideScreen').onclick=requestUnlock;$('hidePasswordForm').onclick=e=>e.stopPropagation();$('hidePasswordFormInner').onsubmit=handleUnlock;
   $('settingsForceRender').onclick=forceRender;$('settingsDiagnose').onclick=diagnoseCurrent;$('settingsHistory').onclick=()=>openDrawer('historyPanel');
   $('createGroupBtn').onclick=createGroup;
   $('groupNameInput').onkeydown=e=>{if(e.key==='Enter')createGroup()};
