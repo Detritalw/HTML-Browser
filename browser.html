@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="zh-CN" data-mode="auto" data-accent="blue">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Qwen Browser</title>
+<style>
+:root{--bg:#f5f7fb;--panel:#fff;--text:#111827;--muted:#6b7280;--border:#d1d5db;--accent:#3b82f6;--accent-soft:color-mix(in srgb,var(--accent) 15%,transparent);--danger:#ef4444;--shadow:0 8px 30px rgba(0,0,0,.12);--radius:12px;--icon-size:18px}
+html[data-mode=dark]{--bg:#0b1220;--panel:#111827;--text:#e5e7eb;--muted:#9ca3af;--border:#374151;--shadow:0 8px 30px rgba(0,0,0,.45)}
+html[data-accent=blue]{--accent:#3b82f6}html[data-accent=purple]{--accent:#8b5cf6}html[data-accent=green]{--accent:#10b981}html[data-accent=orange]{--accent:#f97316}html[data-accent=red]{--accent:#ef4444}
+*{box-sizing:border-box}body{margin:0;height:100vh;display:flex;flex-direction:column;background:var(--bg);color:var(--text);font-family:"Segoe UI","PingFang SC",sans-serif}
+.icon{width:var(--icon-size);height:var(--icon-size);vertical-align:middle;flex-shrink:0;object-fit:contain}
+.icon-fallback{display:inline-flex;align-items:center;justify-content:center;width:var(--icon-size);height:var(--icon-size);font-size:16px;line-height:1;font-weight:bold}
+button .icon,button .icon-fallback,.tab .icon,.bookmark-item .icon{margin-right:6px}
+.tab-close .icon,.tab-close .icon-fallback{margin:0;width:14px;height:14px;font-size:12px}
+.bookmark-item .remove .icon,.bookmark-item .remove .icon-fallback{width:14px;height:14px;margin-left:4px;margin-right:0}
+
+/* Tabs */
+.tabs{display:flex;align-items:center;gap:6px;padding:8px 10px;background:var(--panel);border-bottom:1px solid var(--border);overflow-x:auto;white-space:nowrap;position:relative;z-index:30}
+.tab{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;cursor:pointer;max-width:200px;min-width:80px;background:transparent;border:1px solid transparent;user-select:none}
+.tab.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+.tab:hover:not(.active){background:color-mix(in srgb,var(--border) 30%,transparent)}
+.tab-title{overflow:hidden;text-overflow:ellipsis;flex:1;font-size:13px}
+.tab-close{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;opacity:.6}
+.tab-close:hover{background:var(--danger);opacity:1;color:#fff}
+.tab-add{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px dashed var(--border);color:var(--muted);flex-shrink:0}
+.tab-add:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+
+/* Toolbar - 关键修复：overflow:visible */
+.topbar{display:flex;gap:8px;align-items:center;padding:10px;background:var(--panel);border-bottom:1px solid var(--border);flex-wrap:nowrap;z-index:200;overflow:visible;position:relative}
+button,select,input,textarea{background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:8px 10px;font-size:14px;outline:none;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+button{cursor:pointer}button:hover{border-color:var(--accent);background:var(--accent-soft)}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+button.primary .icon,button.primary .icon-fallback{filter:brightness(10)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.address-form{flex:1;display:flex;gap:8px;min-width:200px}.address-form input{flex:1;min-width:0}
+
+/* More Menu - 关键修复：z-index 9999 */
+.more-wrapper{position:relative;flex-shrink:0;z-index:9999}
+.more-menu{position:absolute;top:calc(100% + 6px);right:0;background:var(--panel);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);min-width:200px;z-index:9999;display:none;flex-direction:column;padding:6px}
+.more-menu.show{display:flex}
+.more-menu button{border:none;background:transparent;justify-content:flex-start;border-radius:8px;padding:10px 12px;width:100%;text-align:left}
+.more-menu button:hover{background:var(--accent-soft);color:var(--accent)}
+.more-menu .divider{height:1px;background:var(--border);margin:4px 0}
+.menu-select-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:8px}
+.menu-select-row:hover{background:var(--accent-soft)}
+.menu-select-label{font-size:14px;flex-shrink:0}
+.menu-select-row select{flex:1;min-width:0;max-width:160px;padding:6px 8px;font-size:13px}
+.menu-input-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:8px}
+.menu-input-row:hover{background:var(--accent-soft)}
+.menu-input-row input{flex:1;min-width:0;padding:6px 8px;font-size:12px;border-radius:6px}
+
+/* Bookmark Bar */
+.bookmarkbar{display:flex;gap:8px;align-items:center;padding:8px 10px;background:var(--panel);border-bottom:1px solid var(--border);overflow:auto;white-space:nowrap;min-height:44px;position:relative;z-index:10}
+.bookmark-item{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--border);border-radius:999px;cursor:pointer;user-select:none}
+.bookmark-item:hover{border-color:var(--accent);background:var(--accent-soft)}
+.bookmark-item .remove{display:flex;align-items:center;color:var(--danger)}
+
+/* Main - 关键修复：z-index:1 确保低于 topbar */
+.main{position:relative;flex:1;overflow:hidden;z-index:1}
+.main iframe{width:100%;height:100%;border:0;background:#fff;position:absolute;inset:0}
+.main iframe.hidden-frame{display:none!important}
+
+/* Overlay */
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--bg) 75%,transparent);backdrop-filter:blur(8px);padding:24px;z-index:30}
+.overlay-card{width:min(720px,100%);background:var(--panel);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:20px}
+.overlay-card h2{margin:0 0 10px;font-size:20px;display:flex;align-items:center;gap:8px}
+.overlay-card pre{white-space:pre-wrap;word-break:break-word;background:color-mix(in srgb,var(--bg) 65%,transparent);border:1px solid var(--border);border-radius:10px;padding:12px;min-height:60px;max-height:260px;overflow:auto;font-size:13px;color:var(--muted)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+
+/* Drawers */
+.drawer{position:fixed;top:0;right:0;width:min(420px,100vw);height:100vh;background:var(--panel);border-left:1px solid var(--border);box-shadow:var(--shadow);z-index:5000;display:flex;flex-direction:column}
+.drawer-header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px;border-bottom:1px solid var(--border);font-weight:700}
+.drawer-body{flex:1;overflow:auto;padding:12px}
+.list-item{border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:10px;cursor:pointer;display:flex;align-items:flex-start;gap:10px}
+.list-item:hover{border-color:var(--accent);background:var(--accent-soft)}
+.list-item .content{flex:1;min-width:0}
+.list-item .title{font-weight:650;margin-bottom:4px;word-break:break-all}
+.list-item .meta{color:var(--muted);font-size:12px;word-break:break-all}
+.form-grid{display:grid;gap:10px}.form-grid label{font-size:13px;color:var(--muted);margin-bottom:4px;display:block}.form-grid input,.form-grid textarea{width:100%}
+.hidden{display:none!important}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:999px;box-shadow:var(--shadow);padding:10px 16px;z-index:99999;display:flex;align-items:center;gap:8px}
+.small{font-size:12px;color:var(--muted);line-height:1.6}
+.checkbox-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ua-textarea{width:100%;min-height:60px;resize:vertical;font-family:monospace;font-size:12px}
+</style>
+</head>
+<body>
+
+<div class="tabs" id="tabsContainer"><div class="tab-add" id="addTabBtn" title="新建标签页"></div></div>
+
+<div class="topbar">
+  <button id="backBtn" title="后退"></button>
+  <button id="forwardBtn" title="前进"></button>
+  <button id="reloadBtn" title="刷新"></button>
+  <button id="homeBtn" title="主页"></button>
+  <form class="address-form" id="addressForm">
+    <input id="address" placeholder="输入网址或搜索内容" autocomplete="off"/>
+    <button class="primary" type="submit" id="goBtn"></button>
+  </form>
+  <div class="more-wrapper" id="moreWrapper">
+    <button id="moreBtn" title="更多功能"></button>
+    <div class="more-menu" id="moreMenu">
+      <button id="bookmarkBtn"></button>
+      <button id="historyBtn"></button>
+      <button id="vncBtn"></button>
+      <div class="divider"></div>
+      <button id="toggleBookmarkBarBtn"></button>
+      <button id="copyBtn"></button>
+      <button id="sourceBtn"></button>
+      <button id="uaBtn"></button>
+      <div class="divider"></div>
+      <button id="diagnoseBtn"></button>
+      <button id="forceRenderBtn"></button>
+      <div class="menu-input-row">
+        <label for="corsProxy" class="menu-select-label">CORS 代理</label>
+        <input id="corsProxy" placeholder="留空直连，如 https://api.allorigins.win/raw?url=" />
+      </div>
+      <div class="menu-input-row">
+        <label for="corsProxyKey" class="menu-select-label">代理密码</label>
+        <input id="corsProxyKey" type="password" placeholder="无密码留空" />
+      </div>
+      <label class="checkbox-row" style="padding:10px 12px;cursor:pointer">
+        <input type="checkbox" id="proxyModeToggle"/><span id="proxyModeLabel"></span>
+      </label>
+      <label class="checkbox-row" style="padding:10px 12px;cursor:pointer">
+        <input type="checkbox" id="sandboxToggle"/><span id="sandboxLabel"></span>
+      </label>
+      <div class="divider"></div>
+      <div class="menu-select-row">
+        <label for="modeSelect" class="menu-select-label">深浅色</label>
+        <select id="modeSelect"><option value="auto">🌓 自动</option><option value="light">☀️ 浅色</option><option value="dark">🌙 深色</option></select>
+      </div>
+      <div class="menu-select-row">
+        <label for="accentSelect" class="menu-select-label">主题色</label>
+        <select id="accentSelect"><option value="blue">🔵 蓝</option><option value="purple">🟣 紫</option><option value="green">🟢 绿</option><option value="orange">🟠 橙</option><option value="red">🔴 红</option></select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="bookmarkbar hidden" id="bookmarkBar"></div>
+
+<div class="main" id="frameContainer">
+  <div class="overlay hidden" id="overlay">
+    <div class="overlay-card">
+      <h2 id="overlayTitle"></h2>
+      <pre id="overlayDesc"></pre>
+      <div class="row">
+        <button id="overlayForceRenderBtn"></button>
+        <button id="overlayRetryBtn"></button>
+        <button id="overlayOpenNewBtn"></button>
+        <button id="overlayCopyBtn"></button>
+        <button id="overlayCloseBtn"></button>
+      </div>
+      <p class="small">若目标站设置了 X-Frame-Options / CSP frame-ancestors，浏览器会禁止嵌入。点击「强制渲染」可通过 fetch+srcdoc 方式绕过限制在本页打开。</p>
+    </div>
+  </div>
+</div>
+
+<aside class="drawer hidden" id="historyPanel">
+  <div class="drawer-header"><span id="historyTitle"></span><div class="row" style="margin:0"><button id="clearHistoryBtn"></button><button data-close="historyPanel" class="close-drawer-btn"></button></div></div>
+  <div class="drawer-body" id="historyList"></div>
+</aside>
+<aside class="drawer hidden" id="vncPanel">
+  <div class="drawer-header"><span id="vncTitle"></span><button data-close="vncPanel" class="close-drawer-btn"></button></div>
+  <div class="drawer-body">
+    <div class="form-grid">
+      <div><label>noVNC 基础地址</label><input id="vncBase" value="/noVNC"/></div>
+      <div><label>VNC 主机</label><input id="vncHost" placeholder="192.168.1.100"/></div>
+      <div><label>WebSocket 端口</label><input id="vncPort" value="6080"/></div>
+      <div><label>路径</label><input id="vncPath" value="websockify"/></div>
+      <div><label>密码（可选）</label><input id="vncPassword" type="password"/></div>
+      <label class="checkbox-row"><input type="checkbox" id="vncEncrypt"/><span id="vncEncryptLabel"></span></label>
+      <button class="primary" id="vncConnectBtn"></button>
+      <p class="small">需部署 noVNC + websockify。示例：websockify --web=/usr/share/novnc/ 6080 localhost:5901<br/>本地直接打开 HTML 时，noVNC 基础地址必须填写完整 URL（如 http://192.168.1.100:6080），不能用相对路径 /noVNC。</p>
+    </div>
+  </div>
+</aside>
+<aside class="drawer hidden" id="sourcePanel">
+  <div class="drawer-header"><span id="sourceTitle"></span><button data-close="sourcePanel" class="close-drawer-btn"></button></div>
+  <div class="drawer-body"><pre id="sourceCode"></pre></div>
+</aside>
+<aside class="drawer hidden" id="uaPanel">
+  <div class="drawer-header"><span id="uaTitle"></span><button data-close="uaPanel" class="close-drawer-btn"></button></div>
+  <div class="drawer-body">
+    <div class="form-grid">
+      <label>当前 User-Agent（只读）</label>
+      <textarea class="ua-textarea" id="uaCurrent" readonly></textarea>
+      <label>自定义 UA（仅用于复制，前端无法真正修改）</label>
+      <textarea class="ua-textarea" id="uaCustom" placeholder="Mozilla/5.0 ..."></textarea>
+      <div class="row">
+        <button id="uaCopyBtn"></button>
+        <button id="uaResetBtn"></button>
+      </div>
+      <p class="small">⚠️ 纯前端 HTML 无法修改 navigator.userAgent。此面板仅供复制 UA 字符串，供后端代理、curl、Electron 等外部工具使用。如需真正修改 UA，请使用浏览器扩展或原生应用容器。</p>
+    </div>
+  </div>
+</aside>
+
+<div class="toast hidden" id="toast"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const HOME="about:blank",SEARCH="https://www.bing.com/search?q=",PROBE_API="",ICON_BASE="https://img.bloret.net/SF",MAX_IFRAMES=20;
+const ICON_MAP={back:{name:"arrow.left",fallback:"←"},forward:{name:"arrow.right",fallback:"→"},reload:{name:"arrow.clockwise",fallback:"⟳"},home:{name:"house",fallback:"⌂"},go:{name:"arrow.up.forward.square",fallback:"↗"},source:{name:"doc.text.magnifyingglass",fallback:"</>"},copy:{name:"link",fallback:"🔗"},bookmark:{name:"star",fallback:"☆"},bookmarkFilled:{name:"star.fill",fallback:"★"},bookmarkBar:{name:"bookmark",fallback:"📑"},history:{name:"clock.arrow.circlepath",fallback:"⏱"},vnc:{name:"server.rack",fallback:"🖥"},diagnose:{name:"exclamationmark.triangle",fallback:"⚠"},force:{name:"bolt.fill",fallback:"⚡"},proxy:{name:"network",fallback:"🌐"},sandbox:{name:"lock.shield",fallback:"🛡"},add:{name:"plus",fallback:"+"},close:{name:"xmark",fallback:"×"},retry:{name:"arrow.counterclockwise",fallback:"↺"},openNew:{name:"square.and.arrow.up",fallback:"↗"},clear:{name:"trash",fallback:"🗑"},encrypt:{name:"lock.fill",fallback:"🔒"},connect:{name:"play.fill",fallback:"▶"},info:{name:"info.circle",fallback:"ℹ"},list:{name:"list.bullet",fallback:"☰"},more:{name:"ellipsis",fallback:"…"},ua:{name:"person.text.rectangle",fallback:"UA"}};
+let tabs=[],activeTabId=null,bookmarks=[],globalHistory=[];
+const frameContainer=$('frameContainer');
+
+function getIcon(name,useAccent=false){const d=ICON_MAP[name]||{name,fallback:"?"};let c=useAccent?getComputedStyle(document.documentElement).getPropertyValue('--accent').trim():getComputedStyle(document.documentElement).getPropertyValue('--text').trim();return `<img src="${ICON_BASE}/${d.name}?color=${encodeURIComponent(c)}" class="icon" alt="" draggable="false" onerror="this.outerHTML='<span class=\\'icon-fallback\\'>${d.fallback}</span>'"/>`}
+function updateAllIcons(){$('backBtn').innerHTML=getIcon('back')+'后退';$('forwardBtn').innerHTML=getIcon('forward')+'前进';$('reloadBtn').innerHTML=getIcon('reload');$('homeBtn').innerHTML=getIcon('home');$('goBtn').innerHTML=getIcon('go',true);$('bookmarkBtn').innerHTML=getIcon('bookmark')+'添加书签';$('historyBtn').innerHTML=getIcon('history')+'历史记录';$('vncBtn').innerHTML=getIcon('vnc')+'VNC 连接';$('moreBtn').innerHTML=getIcon('more');$('toggleBookmarkBarBtn').innerHTML=getIcon('bookmarkBar')+'切换书签栏';$('copyBtn').innerHTML=getIcon('copy')+'复制链接';$('sourceBtn').innerHTML=getIcon('source')+'查看源代码';$('uaBtn').innerHTML=getIcon('ua')+'User-Agent';$('diagnoseBtn').innerHTML=getIcon('diagnose')+'诊断嵌入';$('forceRenderBtn').innerHTML=getIcon('force')+'强制渲染';$('overlayForceRenderBtn').innerHTML=getIcon('force',true)+'强制渲染';$('sandboxLabel').innerHTML=getIcon('sandbox')+'防跳出模式';$('proxyModeLabel').innerHTML=getIcon('proxy')+'全局代理模式';$('addTabBtn').innerHTML=getIcon('add');$('overlayRetryBtn').innerHTML=getIcon('retry')+'重试';$('overlayOpenNewBtn').innerHTML=getIcon('openNew')+'新窗口打开';$('overlayCopyBtn').innerHTML=getIcon('copy')+'复制链接';$('overlayCloseBtn').innerHTML=getIcon('close')+'关闭';$('overlayTitle').innerHTML=getIcon('info',true)+'提示';$('historyTitle').innerHTML=getIcon('history')+'历史记录';$('clearHistoryBtn').innerHTML=getIcon('clear')+'清空';$('vncTitle').innerHTML=getIcon('vnc')+'VNC 连接';$('vncEncryptLabel').innerHTML=getIcon('encrypt')+'强制加密';$('vncConnectBtn').innerHTML=getIcon('connect',true)+'连接 VNC';$('sourceTitle').innerHTML=getIcon('source')+'源代码';$('uaTitle').innerHTML=getIcon('ua')+'User-Agent';$('uaCopyBtn').innerHTML=getIcon('copy')+'复制自定义 UA';$('uaResetBtn').innerHTML=getIcon('reload')+'重置';document.querySelectorAll('.close-drawer-btn').forEach(b=>{b.innerHTML=getIcon('close')});renderTabs();renderBookmarks();updateBookmarkBtn()}
+
+const safeParse=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
+const save=()=>{localStorage.setItem('qwen_tabs',JSON.stringify(tabs));localStorage.setItem('qwen_active_tab',activeTabId);localStorage.setItem('qwen_bookmarks',JSON.stringify(bookmarks));localStorage.setItem('qwen_history',JSON.stringify(globalHistory));localStorage.setItem('qwen_mode',$('modeSelect').value);localStorage.setItem('qwen_accent',$('accentSelect').value);localStorage.setItem('qwen_vnc_base',$('vncBase').value);localStorage.setItem('qwen_vnc_host',$('vncHost').value);localStorage.setItem('qwen_vnc_port',$('vncPort').value);localStorage.setItem('qwen_vnc_path',$('vncPath').value);localStorage.setItem('qwen_vnc_encrypt',$('vncEncrypt').checked?'1':'0');localStorage.setItem('qwen_bookmarkbar_hidden',$('bookmarkBar').classList.contains('hidden')?'1':'0');localStorage.setItem('qwen_sandbox',$('sandboxToggle').checked?'1':'0');localStorage.setItem('qwen_cors_proxy',$('corsProxy').value);localStorage.setItem('qwen_cors_proxy_key',$('corsProxyKey').value);localStorage.setItem('qwen_proxy_mode',$('proxyModeToggle').checked?'1':'0')};
+const toast=msg=>{const t=$('toast');t.innerHTML=getIcon('info',true)+msg;t.classList.remove('hidden');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.add('hidden'),2200)};
+const normalizeUrl=input=>{input=String(input||'').trim();if(!input)return HOME;if(/^(about:|blob:|data:)/i.test(input))return input;if(/^https?:\/\//i.test(input))return input;if(/^[\w-]+(\.[\w-]+)+(:\d+)?(\/.*)?$/i.test(input))return 'https://'+input;return SEARCH+encodeURIComponent(input)};
+const buildProxyUrl=url=>{if(!url||url===HOME)return url;const proxy=($('corsProxy')?.value||'').trim();if(!proxy)return url;if(!$('proxyModeToggle')?.checked)return url;if(url.startsWith(proxy))return url;let result=proxy+encodeURIComponent(url);const key=($('corsProxyKey')?.value||'').trim();if(key)result+=(result.includes('?')?'&':'?')+'key='+encodeURIComponent(key);return result};
+const getUrlTitle=url=>{try{return new URL(url).hostname}catch{return url||'新标签页'}};
+
+function getFrameEl(tabId){return document.getElementById(`frame-${tabId}`)}
+function createFrameEl(tab){const f=document.createElement('iframe');f.id=`frame-${tab.id}`;f.src=buildProxyUrl(tab.url);f.allow="fullscreen;clipboard-read;clipboard-write;camera;microphone;geolocation;display-capture";f.allowFullscreen=true;f.className='hidden-frame';f._isSameOrigin=false;f._savedScroll=null;f.addEventListener('load',()=>{try{if(f.contentWindow&&f.contentWindow.location.origin===location.origin)f._isSameOrigin=true}catch{f._isSameOrigin=false}});frameContainer.insertBefore(f,$('overlay'));applySandboxToFrame(f);return f}
+function destroyFrameEl(tabId){const el=getFrameEl(tabId);if(el)el.remove()}
+function saveFrameState(tabId){const el=getFrameEl(tabId);if(!el||!el._isSameOrigin)return;try{el._savedScroll={x:el.contentWindow.scrollX,y:el.contentWindow.scrollY}}catch{}}
+function restoreFrameState(tabId){const el=getFrameEl(tabId);if(!el||!el._savedScroll||!el._isSameOrigin)return;try{el.contentWindow.scrollTo(el._savedScroll.x,el._savedScroll.y)}catch{}}
+function enforceIframeLimit(){while(tabs.length>MAX_IFRAMES){const oldest=tabs.find(t=>t.id!==activeTabId);if(!oldest)break;destroyFrameEl(oldest.id)}}
+function applySandboxToFrame(f){const on=$('sandboxToggle').checked;if(on)f.setAttribute('sandbox','allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads allow-modals allow-pointer-lock allow-orientation-lock');else f.removeAttribute('sandbox')}
+function applySandbox(){tabs.forEach(t=>{const f=getFrameEl(t.id);if(f)applySandboxToFrame(f)})}
+
+function createTab(url=HOME,activate=true){const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);const tab={id,url,history:[url],histIdx:0,title:getUrlTitle(url)};tabs.push(tab);enforceIframeLimit();createFrameEl(tab);if(activate)switchTab(id);renderTabs();save();return id}
+function closeTab(id,e){if(e)e.stopPropagation();const idx=tabs.findIndex(t=>t.id===id);if(idx===-1)return;destroyFrameEl(id);tabs.splice(idx,1);if(tabs.length===0){createTab();return}if(activeTabId===id){switchTab(tabs[Math.min(idx,tabs.length-1)].id)}else{renderTabs();save()}}
+function switchTab(id){if(activeTabId===id)return;if(activeTabId){saveFrameState(activeTabId);const old=getFrameEl(activeTabId);if(old)old.classList.add('hidden-frame')}activeTabId=id;const tab=tabs.find(t=>t.id===id);if(!tab)return;let frame=getFrameEl(id);if(!frame)frame=createFrameEl(tab);frame.classList.remove('hidden-frame');restoreFrameState(id);$('address').value=tab.url;updateNavButtons();updateBookmarkBtn();renderTabs();hideOverlay();save()}
+function getActiveTab(){return tabs.find(t=>t.id===activeTabId)}
+function renderTabs(){const c=$('tabsContainer'),add=$('addTabBtn');c.innerHTML='';tabs.forEach(tab=>{const el=document.createElement('div');const isActive=tab.id===activeTabId;el.className='tab'+(isActive?' active':'');el.innerHTML=`${getIcon('list',isActive)}<span class="tab-title">${tab.title||'新标签页'}</span><span class="tab-close">${getIcon('close')}</span>`;el.onclick=()=>switchTab(tab.id);el.querySelector('.tab-close').onclick=e=>closeTab(tab.id,e);c.appendChild(el)});c.appendChild(add)}
+
+function navigate(input,push=true){const tab=getActiveTab();if(!tab)return;const url=normalizeUrl(input);const frameUrl=buildProxyUrl(url);if(push){tab.history=tab.history.slice(0,tab.histIdx+1);tab.history.push(url);tab.histIdx=tab.history.length-1;addGlobalHistory(url)}else{tab.history[tab.histIdx]=url}tab.url=url;tab.title=getUrlTitle(url);const frame=getFrameEl(tab.id);if(frame)frame.src=frameUrl;$('address').value=url;updateNavButtons();updateBookmarkBtn();renderTabs();hideOverlay();save()}
+function back(){const tab=getActiveTab();if(!tab||tab.histIdx<=0)return;tab.histIdx--;tab.url=tab.history[tab.histIdx];const frame=getFrameEl(tab.id);if(frame)frame.src=buildProxyUrl(tab.url);$('address').value=tab.url;updateNavButtons();save()}
+function forward(){const tab=getActiveTab();if(!tab||tab.histIdx>=tab.history.length-1)return;tab.histIdx++;tab.url=tab.history[tab.histIdx];const frame=getFrameEl(tab.id);if(frame)frame.src=buildProxyUrl(tab.url);$('address').value=tab.url;updateNavButtons();save()}
+function reload(){const f=getFrameEl(activeTabId);if(!f)return;const tab=getActiveTab();if(tab&&$('proxyModeToggle')?.checked){f.src=buildProxyUrl(tab.url);return}try{f.contentWindow.location.reload()}catch{f.src=f.src}}
+function updateNavButtons(){const tab=getActiveTab();$('backBtn').disabled=!tab||tab.histIdx<=0;$('forwardBtn').disabled=!tab||tab.histIdx>=tab.history.length-1}
+
+function addGlobalHistory(url){if(!url||url===HOME)return;globalHistory.unshift({url,title:getUrlTitle(url),time:new Date().toLocaleString()});globalHistory=globalHistory.slice(0,500);save();renderHistory()}
+function toggleBookmark(){const tab=getActiveTab();if(!tab||tab.url===HOME){toast('无法加入书签');return}const i=bookmarks.findIndex(b=>b.url===tab.url);if(i>=0){bookmarks.splice(i,1);toast('已移除书签')}else{bookmarks.unshift({url:tab.url,title:tab.title});toast('已添加书签')}save();renderBookmarks();updateBookmarkBtn()}
+function updateBookmarkBtn(){const tab=getActiveTab();const has=tab&&bookmarks.some(b=>b.url===tab.url);$('bookmarkBtn').innerHTML=has?getIcon('bookmarkFilled',true)+'移除书签':getIcon('bookmark')+'添加书签';$('bookmarkBtn').title=has?'移除书签':'添加书签'}
+function renderBookmarks(){const bar=$('bookmarkBar');bar.innerHTML='';if(!bookmarks.length){bar.innerHTML=`<span class="small">${getIcon('info')} 暂无书签</span>`;return}bookmarks.forEach((b,i)=>{const el=document.createElement('span');el.className='bookmark-item';el.innerHTML=`${getIcon('bookmarkFilled',true)}<span>${b.title||b.url}</span><span class="remove">${getIcon('close')}</span>`;el.onclick=()=>navigate(b.url);el.querySelector('.remove').onclick=e=>{e.stopPropagation();bookmarks.splice(i,1);save();renderBookmarks();updateBookmarkBtn()};bar.appendChild(el)})}
+function renderHistory(){const list=$('historyList');list.innerHTML='';if(!globalHistory.length){list.innerHTML=`<div class="small">${getIcon('info')} 暂无历史</div>`;return}globalHistory.forEach(h=>{const el=document.createElement('div');el.className='list-item';el.innerHTML=`${getIcon('list')}<div class="content"><div class="title">${h.title}</div><div class="meta">${h.time}\n${h.url}</div></div>`;el.onclick=()=>{navigate(h.url);closeDrawer('historyPanel')};list.appendChild(el)})}
+
+function applyMode(){const mode=$('modeSelect').value;document.documentElement.dataset.mode=mode;if(mode==='auto')document.documentElement.dataset.mode=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';updateAllIcons()}
+function applyAccent(){document.documentElement.dataset.accent=$('accentSelect').value;updateAllIcons()}
+function showOverlay(title,desc){$('overlayTitle').innerHTML=getIcon('info',true)+title;$('overlayDesc').textContent=desc;$('overlay').classList.remove('hidden')}
+function hideOverlay(){$('overlay').classList.add('hidden')}
+function openDrawer(id){document.querySelectorAll('.drawer').forEach(d=>d.classList.add('hidden'));$(id).classList.remove('hidden')}
+function closeDrawer(id){$(id).classList.add('hidden')}
+
+async function viewSource(){const tab=getActiveTab();if(!tab||tab.url===HOME){toast('无源代码');return}openDrawer('sourcePanel');$('sourceCode').textContent='加载中...\n'+tab.url;try{const r=await fetch(tab.url,{cache:'no-store'});$('sourceCode').textContent=await r.text()}catch(e){$('sourceCode').textContent='无法获取：跨域/登录/反爬限制。\n\n'+String(e)}}
+async function diagnoseCurrent(){const tab=getActiveTab();if(!tab||tab.url===HOME){toast('无法诊断');return}showOverlay('诊断中','目标：'+tab.url+'\n正在检测...');if(PROBE_API){try{const r=await fetch(PROBE_API+encodeURIComponent(tab.url));const d=await r.json();showOverlay(d.embeddable?'未检测到限制':'检测到嵌入限制',`XFO: ${d.xFrameOptions||'无'}\nCSP: ${d.contentSecurityPolicy||'无'}\n${d.message||''}`)}catch(e){showOverlay('诊断失败',String(e))}return}try{const r=await fetch(tab.url,{mode:'cors',cache:'no-store'});const xfo=r.headers.get('x-frame-options')||'',csp=r.headers.get('content-security-policy')||'';let blocked=/deny/i.test(xfo)||(/sameorigin/i.test(xfo)&&new URL(tab.url).origin!==location.origin)||/frame-ancestors\s+('none'|'self')/i.test(csp);showOverlay(blocked?'检测到限制':'未检测到限制',`XFO: ${xfo||'无'}\nCSP: ${csp||'无'}\n注意：CORS 可能阻止读取头信息`)}catch(e){showOverlay('无法诊断','CORS/网络限制，建议配置后端 PROBE_API\n\n'+String(e))}}
+async function forceRender(){const tab=getActiveTab();if(!tab||tab.url===HOME){toast('无页面可渲染');return}const url=tab.url;showOverlay('强制渲染中','正在获取页面内容...\n'+url);try{const proxy=($('corsProxy')?.value||'').trim();const proxyKey=($('corsProxyKey')?.value||'').trim();let fetchUrl=url;if(proxy){fetchUrl=proxy+encodeURIComponent(url);if(proxyKey){fetchUrl+=(fetchUrl.includes('?')?'&':'?')+'key='+encodeURIComponent(proxyKey)}}const res=await fetch(fetchUrl,{mode:'cors',cache:'no-store',redirect:'follow'});if(!res.ok)throw new Error('HTTP '+res.status);let html=await res.text();const safeUrl=url.replace(/"/g,'&quot;');const antiBust='<script>try{Object.defineProperty(window,"top",{get:function(){return window}});Object.defineProperty(window,"parent",{get:function(){return window}});Object.defineProperty(window,"frameElement",{get:function(){return null}})}catch(e){}<\/script>';const baseTag='<base href="'+safeUrl+'">';if(/<head[^>]*>/i.test(html)){html=html.replace(/<head[^>]*>/i,'$&'+baseTag+antiBust)}else if(/<html[^>]*>/i.test(html)){html=html.replace(/<html[^>]*>/i,'$&<head>'+baseTag+antiBust+'</head>')}else{html='<!DOCTYPE html><html><head>'+baseTag+antiBust+'</head><body>'+html+'</body></html>'}const frame=getFrameEl(tab.id);if(frame){frame.srcdoc=html;frame.removeAttribute('src')}hideOverlay();toast('已通过强制渲染模式打开')}catch(e){showOverlay('强制渲染失败','目标：'+url+'\n\n错误：'+String(e)+'\n\n可能原因：\n1. 目标站禁止跨域抓取（CORS），请在更多菜单配置 CORS 代理\n2. 网络连接错误\n3. 目标站需要登录验证')}}
+function connectVNC(){const base=$('vncBase').value.trim().replace(/\/+$/,'');const host=$('vncHost').value.trim();const port=$('vncPort').value.trim();const path=$('vncPath').value.trim();const pwd=$('vncPassword').value;if(!host){toast('请填写主机');return}const isAbsoluteBase=/^https?:\/\//i.test(base);if(!isAbsoluteBase&&(!location.origin||location.origin==='null')){toast('本地打开文件时 noVNC 基础地址需填完整 URL（http://...）');return}const p=new URLSearchParams({autoconnect:'true',host,port,path,resize:'scale',reconnect:'1'});if($('vncEncrypt').checked)p.set('encrypt','true');if(pwd)p.set('password',pwd);let vncUrl;if(isAbsoluteBase){vncUrl=`${base}/vnc_lite.html?${p}`}else{vncUrl=`${location.origin}${base}/vnc_lite.html?${p}`}navigate(vncUrl);closeDrawer('vncPanel');save()}
+
+function initUAPanel(){$('uaCurrent').value=navigator.userAgent;$('uaCustom').value=localStorage.getItem('qwen_custom_ua')||navigator.userAgent}
+function copyCustomUA(){const ua=$('uaCustom').value;if(!ua){toast('UA 为空');return}navigator.clipboard.writeText(ua).then(()=>toast('已复制 UA')).catch(()=>window.prompt('复制 UA',ua))}
+
+function init(){
+  tabs=safeParse('qwen_tabs',[]);activeTabId=localStorage.getItem('qwen_active_tab');
+  bookmarks=safeParse('qwen_bookmarks',[]);globalHistory=safeParse('qwen_history',[]);
+  $('modeSelect').value=localStorage.getItem('qwen_mode')||'auto';
+  $('accentSelect').value=localStorage.getItem('qwen_accent')||'blue';
+  $('vncBase').value=localStorage.getItem('qwen_vnc_base')||'/noVNC';
+  $('vncHost').value=localStorage.getItem('qwen_vnc_host')||location.hostname||'';
+  $('vncPort').value=localStorage.getItem('qwen_vnc_port')||'6080';
+  $('vncPath').value=localStorage.getItem('qwen_vnc_path')||'websockify';
+  $('vncEncrypt').checked=localStorage.getItem('qwen_vnc_encrypt')==='1';
+  $('bookmarkBar').classList.toggle('hidden',localStorage.getItem('qwen_bookmarkbar_hidden')!=='0');
+  $('sandboxToggle').checked=localStorage.getItem('qwen_sandbox')==='1';
+  $('corsProxy').value=localStorage.getItem('qwen_cors_proxy')||'';
+  $('corsProxyKey').value=localStorage.getItem('qwen_cors_proxy_key')||'';
+  $('proxyModeToggle').checked=localStorage.getItem('qwen_proxy_mode')==='1';
+  applyMode();applyAccent();renderBookmarks();renderHistory();initUAPanel();
+  if(tabs.length===0){createTab()}else{if(!tabs.find(t=>t.id===activeTabId))activeTabId=tabs[0].id;tabs.forEach(t=>{if(!getFrameEl(t.id))createFrameEl(t)});renderTabs();switchTab(activeTabId)}
+
+  // 修复：点击外部关闭菜单，使用正确的 ID
+  $('moreBtn').onclick=e=>{e.stopPropagation();$('moreMenu').classList.toggle('show')};
+  document.addEventListener('click',e=>{
+    const wrapper=$('moreWrapper');
+    const menu=$('moreMenu');
+    if(wrapper&&!wrapper.contains(e.target)){menu.classList.remove('show')}
+  });
+  $('moreMenu').addEventListener('click',e=>{if(e.target.tagName==='BUTTON')$('moreMenu').classList.remove('show')});
+
+  $('addTabBtn').onclick=()=>createTab();
+  $('addressForm').onsubmit=e=>{e.preventDefault();navigate($('address').value)};
+  $('backBtn').onclick=back;$('forwardBtn').onclick=forward;$('reloadBtn').onclick=reload;
+  $('homeBtn').onclick=()=>navigate(HOME);
+  $('copyBtn').onclick=async()=>{const t=getActiveTab();if(t){try{await navigator.clipboard.writeText(t.url);toast('已复制')}catch{window.prompt('复制',t.url)}}};
+  $('bookmarkBtn').onclick=toggleBookmark;
+  $('toggleBookmarkBarBtn').onclick=()=>{$('bookmarkBar').classList.toggle('hidden');save()};
+  $('sourceBtn').onclick=viewSource;
+  $('uaBtn').onclick=()=>{initUAPanel();openDrawer('uaPanel')};
+  $('uaCopyBtn').onclick=copyCustomUA;
+  $('uaResetBtn').onclick=()=>{$('uaCustom').value=navigator.userAgent;localStorage.removeItem('qwen_custom_ua');toast('已重置')};
+  $('uaCustom').addEventListener('input',()=>localStorage.setItem('qwen_custom_ua',$('uaCustom').value));
+  $('historyBtn').onclick=()=>openDrawer('historyPanel');
+  $('vncBtn').onclick=()=>openDrawer('vncPanel');
+  $('diagnoseBtn').onclick=diagnoseCurrent;
+  $('forceRenderBtn').onclick=forceRender;
+  $('corsProxy').addEventListener('input',()=>save());
+  $('corsProxyKey').addEventListener('input',()=>save());
+  $('proxyModeToggle').onchange=()=>{save();const tab=getActiveTab();if(tab&&tab.url!==HOME){const frame=getFrameEl(tab.id);if(frame)frame.src=buildProxyUrl(tab.url)}toast($('proxyModeToggle').checked?'已开启全局代理':'已关闭全局代理')};
+  $('clearHistoryBtn').onclick=()=>{globalHistory=[];save();renderHistory();toast('已清空')};
+  $('vncConnectBtn').onclick=connectVNC;
+  $('modeSelect').onchange=()=>{applyMode();save()};
+  $('accentSelect').onchange=()=>{applyAccent();save()};
+  $('sandboxToggle').onchange=()=>{applySandbox();save();reload()};
+  document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeDrawer(b.dataset.close));
+  $('overlayForceRenderBtn').onclick=forceRender;
+  $('overlayRetryBtn').onclick=()=>{hideOverlay();reload()};
+  $('overlayOpenNewBtn').onclick=()=>{const t=getActiveTab();if(t)window.open(t.url,'_blank','noopener,noreferrer')};
+  $('overlayCopyBtn').onclick=$('copyBtn').onclick;
+  $('overlayCloseBtn').onclick=hideOverlay;
+  matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{if($('modeSelect').value==='auto')applyMode()});
+}
+init();
+</script>
+</body>
+</html>
