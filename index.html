@@ -263,7 +263,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     </section>
     <section class="settings-section">
       <h3><img src="https://img.bloret.net/SF/lock.fill" class="icon" alt=""/>隐藏与密码</h3>
-      <p>设置 HIDENOW 的遮罩样式和解锁密码。默认密码为 1145141919810；万能密码为 HIDENOW-MASTER-114514。</p>
+      <p>设置 HIDENOW 的遮罩样式和解锁密码。默认密码为 1145141919810；万能密码为 1145141919810。</p>
       <div class="settings-grid">
         <div class="menu-select-row"><label for="settingsHideMode" class="menu-select-label">遮罩类型</label><select id="settingsHideMode"><option value="image">图片</option><option value="solid">纯色</option></select></div>
         <div class="menu-input-row"><label for="settingsHideImage" class="menu-select-label">遮罩图片</label><input id="settingsHideImage" type="url" placeholder="图片 URL"/></div>
@@ -338,7 +338,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
 <script>
 const $=id=>document.getElementById(id);
-const DEFAULT_HIDE_PASSWORD='1145141919810',MASTER_HIDE_PASSWORD='HIDENOW-MASTER-114514',SETTINGS_URL="html://settings",SETTINGS_PAGE="settings.html",SETTINGS_SRC=`<!doctype html>
+const DEFAULT_HIDE_PASSWORD='1145141919810',MASTER_HIDE_PASSWORD='1145141919810',SETTINGS_URL="html://settings",SETTINGS_PAGE="settings.html",SETTINGS_SRC=`<!doctype html>
 <html lang="zh-CN" data-mode="auto" data-accent="blue">
 <head>
 <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
@@ -355,7 +355,7 @@ html[data-accent=purple]{--accent:#8b5cf6}html[data-accent=green]{--accent:#10b9
   <header class="header"><button id="backBtn">返回浏览器</button><h1>设置</h1></header>
   <section class="section"><h2>外观与布局</h2><p>调整界面主题和浏览器布局。</p><div class="grid"><div class="row"><label for="mode">深浅色</label><select id="mode"><option value="auto">自动</option><option value="light">浅色</option><option value="dark">深色</option></select></div><div class="row"><label for="accent">主题色</label><select id="accent"><option value="blue">蓝</option><option value="purple">紫</option><option value="green">绿</option><option value="orange">橙</option><option value="red">红</option></select></div><label class="check"><input type="checkbox" id="vertical"/>垂直显示标签页</label><label class="check"><input type="checkbox" id="bookmarkbar"/>显示书签栏</label></div></section>
   <section class="section"><h2>网络与代理</h2><p>代理地址应包含参数名，或使用 <code>{url}</code> 占位符。</p><div class="grid"><div class="row"><label for="proxy">CORS 代理</label><input id="proxy" type="url" placeholder="https://proxy.example/?url="/></div><div class="row"><label for="proxyKey">代理密码</label><input id="proxyKey" type="password"/></div><label class="check"><input type="checkbox" id="proxyMode"/>开启全局代理模式</label></div></section>
-  <section class="section"><h2>隐藏与密码</h2><p>HIDENOW 遮罩配置。默认密码为 1145141919810；万能密码为 HIDENOW-MASTER-114514。</p><div class="grid"><div class="row"><label for="hideMode">遮罩类型</label><select id="hideMode"><option value="image">图片</option><option value="solid">纯色</option></select></div><div class="row"><label for="hideImage">遮罩图片</label><input id="hideImage" type="url"/></div><div class="row"><label for="hidePassword">解锁密码</label><input id="hidePassword" type="password" placeholder="默认：1145141919810"/></div></div></section>
+  <section class="section"><h2>隐藏与密码</h2><p>HIDENOW 遮罩配置。默认密码为 1145141919810；万能密码为 1145141919810。</p><div class="grid"><div class="row"><label for="hideMode">遮罩类型</label><select id="hideMode"><option value="image">图片</option><option value="solid">纯色</option></select></div><div class="row"><label for="hideImage">遮罩图片</label><input id="hideImage" type="url"/></div><div class="row"><label for="hidePassword">解锁密码</label><input id="hidePassword" type="password" placeholder="默认：1145141919810"/></div></div></section>
   <section class="section"><h2>页面安全</h2><p>防跳出模式可能影响登录、弹窗和部分页面功能。</p><label class="check"><input type="checkbox" id="sandbox"/>防跳出模式</label></section>
   <div class="hint">设置会自动保存到当前浏览器。使用 <code>html://settings</code> 可再次打开本页面。</div>
 </main><div class="saved" id="saved">已保存</div>
