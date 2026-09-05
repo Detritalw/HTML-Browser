@@ -154,11 +154,11 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <div class="divider"></div>
       <div class="menu-select-row">
         <label for="modeSelect" class="menu-select-label">深浅色</label>
-        <select id="modeSelect"><option value="auto">🌓 自动</option><option value="light">☀️ 浅色</option><option value="dark">🌙 深色</option></select>
+        <select id="modeSelect"><option value="auto">自动</option><option value="light">浅色</option><option value="dark">深色</option></select>
       </div>
       <div class="menu-select-row">
         <label for="accentSelect" class="menu-select-label">主题色</label>
-        <select id="accentSelect"><option value="blue">🔵 蓝</option><option value="purple">🟣 紫</option><option value="green">🟢 绿</option><option value="orange">🟠 橙</option><option value="red">🔴 红</option></select>
+        <select id="accentSelect"><option value="blue">蓝</option><option value="purple">紫</option><option value="green">绿</option><option value="orange">橙</option><option value="red">红</option></select>
       </div>
     </div>
   </div>
@@ -218,7 +218,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
         <button id="uaCopyBtn"></button>
         <button id="uaResetBtn"></button>
       </div>
-      <p class="small">⚠️ 纯前端 HTML 无法修改 navigator.userAgent。此面板仅供复制 UA 字符串，供后端代理、curl、Electron 等外部工具使用。如需真正修改 UA，请使用浏览器扩展或原生应用容器。</p>
+      <p class="small">纯前端 HTML 无法修改 navigator.userAgent。此面板仅供复制 UA 字符串，供后端代理、curl、Electron 等外部工具使用。如需真正修改 UA，请使用浏览器扩展或原生应用容器。</p>
     </div>
   </div>
 </aside>
@@ -228,11 +228,11 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <script>
 const $=id=>document.getElementById(id);
 const HOME="about:blank",SEARCH="https://www.bing.com/search?q=",PROBE_API="",ICON_API="https://img.bloret.net/SF",MAX_IFRAMES=20;
-const ICON_MAP={back:{name:"arrow.left",fallback:"←"},forward:{name:"arrow.right",fallback:"→"},reload:{name:"arrow.clockwise",fallback:"⟳"},home:{name:"house",fallback:"⌂"},go:{name:"arrow.up.forward.square",fallback:"↗"},source:{name:"doc.text.magnifyingglass",fallback:"</>"},copy:{name:"link",fallback:"🔗"},bookmark:{name:"star",fallback:"☆"},bookmarkFilled:{name:"star.fill",fallback:"★"},bookmarkBar:{name:"bookmark",fallback:"📑"},history:{name:"clock.arrow.circlepath",fallback:"⏱"},vnc:{name:"server.rack",fallback:"🖥"},diagnose:{name:"exclamationmark.triangle",fallback:"⚠"},force:{name:"bolt.fill",fallback:"⚡"},proxy:{name:"network",fallback:"🌐"},sandbox:{name:"lock.shield",fallback:"🛡"},add:{name:"plus",fallback:"+"},close:{name:"xmark",fallback:"×"},retry:{name:"arrow.counterclockwise",fallback:"↺"},openNew:{name:"square.and.arrow.up",fallback:"↗"},clear:{name:"trash",fallback:"🗑"},encrypt:{name:"lock.fill",fallback:"🔒"},connect:{name:"play.fill",fallback:"▶"},info:{name:"info.circle",fallback:"ℹ"},list:{name:"list.bullet",fallback:"☰"},more:{name:"ellipsis",fallback:"…"},ua:{name:"person.text.rectangle",fallback:"UA"}};
+const ICON_MAP={back:{name:"arrow.left"},forward:{name:"arrow.right"},reload:{name:"arrow.clockwise"},home:{name:"house"},go:{name:"arrow.up.forward.square"},source:{name:"doc.text.magnifyingglass"},copy:{name:"link"},bookmark:{name:"star"},bookmarkFilled:{name:"star.fill"},bookmarkBar:{name:"bookmark"},history:{name:"clock.arrow.circlepath"},vnc:{name:"server.rack"},diagnose:{name:"exclamationmark.triangle"},force:{name:"bolt.fill"},proxy:{name:"network"},sandbox:{name:"lock.shield"},add:{name:"plus"},close:{name:"xmark"},retry:{name:"arrow.counterclockwise"},openNew:{name:"square.and.arrow.up"},clear:{name:"trash"},encrypt:{name:"lock.fill"},connect:{name:"play.fill"},info:{name:"info.circle"},list:{name:"list.bullet"},more:{name:"ellipsis"},ua:{name:"person.text.rectangle"}};
 let tabs=[],activeTabId=null,bookmarks=[],globalHistory=[];
 const frameContainer=$('frameContainer');
 
-function getIcon(name,useAccent=false){const d=ICON_MAP[name]||{name,fallback:"?"};let c=useAccent?getComputedStyle(document.documentElement).getPropertyValue('--accent').trim():getComputedStyle(document.documentElement).getPropertyValue('--text').trim();return `<img src="${ICON_API}/${d.name}?color=${encodeURIComponent(c)}" class="icon" alt="" draggable="false" onerror="this.outerHTML='<span class=\\'icon-fallback\\'>${d.fallback}</span>'"/>`}
+function getIcon(name,useAccent=false){const d=ICON_MAP[name]||{name};let c=useAccent?getComputedStyle(document.documentElement).getPropertyValue('--accent').trim():getComputedStyle(document.documentElement).getPropertyValue('--text').trim();return `<img src="${ICON_API}/${d.name}?color=${encodeURIComponent(c)}" class="icon" alt="" draggable="false"/>`}
 function updateAllIcons(){$('backBtn').innerHTML=getIcon('back')+'后退';$('forwardBtn').innerHTML=getIcon('forward')+'前进';$('reloadBtn').innerHTML=getIcon('reload');$('homeBtn').innerHTML=getIcon('home');$('goBtn').innerHTML=getIcon('go',true);$('bookmarkBtn').innerHTML=getIcon('bookmark')+'添加书签';$('historyBtn').innerHTML=getIcon('history')+'历史记录';$('vncBtn').innerHTML=getIcon('vnc')+'VNC 连接';$('moreBtn').innerHTML=getIcon('more');$('toggleBookmarkBarBtn').innerHTML=getIcon('bookmarkBar')+'切换书签栏';$('copyBtn').innerHTML=getIcon('copy')+'复制链接';$('sourceBtn').innerHTML=getIcon('source')+'查看源代码';$('uaBtn').innerHTML=getIcon('ua')+'User-Agent';$('diagnoseBtn').innerHTML=getIcon('diagnose')+'诊断嵌入';$('forceRenderBtn').innerHTML=getIcon('force')+'强制渲染';$('overlayForceRenderBtn').innerHTML=getIcon('force',true)+'强制渲染';$('sandboxLabel').innerHTML=getIcon('sandbox')+'防跳出模式';$('proxyModeLabel').innerHTML=getIcon('proxy')+'全局代理模式';$('addTabBtn').innerHTML=getIcon('add');$('overlayRetryBtn').innerHTML=getIcon('retry')+'重试';$('overlayOpenNewBtn').innerHTML=getIcon('openNew')+'新窗口打开';$('overlayCopyBtn').innerHTML=getIcon('copy')+'复制链接';$('overlayCloseBtn').innerHTML=getIcon('close')+'关闭';$('overlayTitle').innerHTML=getIcon('info',true)+'提示';$('historyTitle').innerHTML=getIcon('history')+'历史记录';$('clearHistoryBtn').innerHTML=getIcon('clear')+'清空';$('vncTitle').innerHTML=getIcon('vnc')+'VNC 连接';$('vncEncryptLabel').innerHTML=getIcon('encrypt')+'强制加密';$('vncConnectBtn').innerHTML=getIcon('connect',true)+'连接 VNC';$('sourceTitle').innerHTML=getIcon('source')+'源代码';$('uaTitle').innerHTML=getIcon('ua')+'User-Agent';$('uaCopyBtn').innerHTML=getIcon('copy')+'复制自定义 UA';$('uaResetBtn').innerHTML=getIcon('reload')+'重置';document.querySelectorAll('.close-drawer-btn').forEach(b=>{b.innerHTML=getIcon('close')});renderTabs();renderBookmarks();updateBookmarkBtn()}
 
 const safeParse=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
