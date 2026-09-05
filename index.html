@@ -480,16 +480,16 @@ function init(){
   $('settingsBtn').onclick=()=>{navigate(SETTINGS_URL);$('moreMenu').classList.remove('show')};
   window.syncSettingsFromStorage=syncSettingsFromStorage;window.addEventListener('message',e=>{if(e.data?.type==='qwen-settings-change')syncSettingsFromStorage(e.data.key)});
   $('splitLeftTab').onchange=e=>switchSplitPane(e.target.value,'left');$('splitRightTab').onchange=e=>switchSplitPane(e.target.value,'right');$('swapSplitBtn').onclick=()=>{if(splitTabIds.length===2){splitTabIds.reverse();setSplitPair(splitTabIds[0],splitTabIds[1])}};$('splitLeftForm').onsubmit=e=>submitSplitPane('left',e);$('splitRightForm').onsubmit=e=>submitSplitPane('right',e);
-  $('settingsModeSelect').onchange=e=>{$('modeSelect').value=e.target.value;applyMode();save()};
-  $('settingsAccentSelect').onchange=e=>{$('accentSelect').value=e.target.value;applyAccent();save()};
-  $('settingsVerticalTabs').onchange=e=>{verticalTabs=e.target.checked;applyVerticalTabs()};
-  $('settingsBookmarkBar').onchange=()=>{$('bookmarkBar').classList.toggle('hidden',!$('settingsBookmarkBar').checked);save()};$('settingsDefaultTab').oninput=e=>{localStorage.setItem('qwen_default_tab',e.target.value.trim());save()};
-  $('settingsCorsProxy').oninput=e=>{$('corsProxy').value=e.target.value;save();reloadActiveWithSettings()};$('settingsCorsProxyKey').oninput=e=>{$('corsProxyKey').value=e.target.value;save();reloadActiveWithSettings()};$('settingsProxyMode').onchange=e=>{$('proxyModeToggle').checked=e.target.checked;save();const tab=getActiveTab();if(tab&&tab.url!==HOME){const frame=getFrameEl(tab.id);if(frame)frame.src=buildProxyUrl(tab.url)}};
-  $('settingsSandbox').onchange=e=>{$('sandboxToggle').checked=e.target.checked;applySandbox();save();reload()};
-  $('settingsHideMode').onchange=()=>{localStorage.setItem('qwen_hide_mode',$('settingsHideMode').value);applyHideScreen();save()};$('settingsHideImage').oninput=()=>{localStorage.setItem('qwen_hide_image',$('settingsHideImage').value);applyHideScreen();save()};$('settingsHidePassword').oninput=e=>{localStorage.setItem('qwen_hide_password',e.target.value||DEFAULT_HIDE_PASSWORD);save()};
-  $('saveSettings').onclick=saveAllSettings;
+  if($('settingsModeSelect'))$('settingsModeSelect').onchange=e=>{$('modeSelect').value=e.target.value;applyMode();save()};
+  if($('settingsAccentSelect'))$('settingsAccentSelect').onchange=e=>{$('accentSelect').value=e.target.value;applyAccent();save()};
+  if($('settingsVerticalTabs'))$('settingsVerticalTabs').onchange=e=>{verticalTabs=e.target.checked;applyVerticalTabs()};
+  if($('settingsBookmarkBar'))$('settingsBookmarkBar').onchange=()=>{$('bookmarkBar').classList.toggle('hidden',!$('settingsBookmarkBar').checked);save()};if($('settingsDefaultTab'))$('settingsDefaultTab').oninput=e=>{localStorage.setItem('qwen_default_tab',e.target.value.trim());save()};
+  if($('settingsCorsProxy'))$('settingsCorsProxy').oninput=e=>{$('corsProxy').value=e.target.value;save();reloadActiveWithSettings()};if($('settingsCorsProxyKey'))$('settingsCorsProxyKey').oninput=e=>{$('corsProxyKey').value=e.target.value;save();reloadActiveWithSettings()};if($('settingsProxyMode'))$('settingsProxyMode').onchange=e=>{$('proxyModeToggle').checked=e.target.checked;save();const tab=getActiveTab();if(tab&&tab.url!==HOME){const frame=getFrameEl(tab.id);if(frame)frame.src=buildProxyUrl(tab.url)}};
+  if($('settingsSandbox'))$('settingsSandbox').onchange=e=>{$('sandboxToggle').checked=e.target.checked;applySandbox();save();reload()};
+  if($('settingsHideMode'))$('settingsHideMode').onchange=()=>{localStorage.setItem('qwen_hide_mode',$('settingsHideMode').value);applyHideScreen();save()};if($('settingsHideImage'))$('settingsHideImage').oninput=()=>{localStorage.setItem('qwen_hide_image',$('settingsHideImage').value);applyHideScreen();save()};if($('settingsHidePassword'))$('settingsHidePassword').oninput=e=>{localStorage.setItem('qwen_hide_password',e.target.value||DEFAULT_HIDE_PASSWORD);save()};
+  if($('saveSettings'))$('saveSettings').onclick=saveAllSettings;
   $('hideNowBtn').onclick=lockScreen;$('hideScreen').addEventListener('pointerdown',requestUnlock);$('hideScreen').addEventListener('click',e=>e.stopPropagation());$('hidePasswordForm').onclick=e=>e.stopPropagation();$('hidePasswordFormInner').onsubmit=handleUnlock;
-  $('settingsForceRender').onclick=forceRender;$('settingsDiagnose').onclick=diagnoseCurrent;$('settingsHistory').onclick=()=>openDrawer('historyPanel');
+  if($('settingsForceRender'))$('settingsForceRender').onclick=forceRender;if($('settingsDiagnose'))$('settingsDiagnose').onclick=diagnoseCurrent;if($('settingsHistory'))$('settingsHistory').onclick=()=>openDrawer('historyPanel');
   $('createGroupBtn').onclick=createGroup;
   $('groupNameInput').onkeydown=e=>{if(e.key==='Enter')createGroup()};
   document.addEventListener('click',e=>{
