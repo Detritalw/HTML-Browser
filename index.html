@@ -470,7 +470,7 @@ function init(){
   applyMode();applyAccent();renderBookmarks();renderHistory();initUAPanel();applyHideScreen();
   if(tabs.length===0){createTab()}else{if(!tabs.find(t=>t.id===activeTabId))activeTabId=tabs[0].id;tabs.forEach(t=>{if(!getFrameEl(t.id))createFrameEl(t)});renderTabs();switchTab(activeTabId)}
   if(localStorage.getItem('qwen_split_view')==='1'&&tabs.length>1)toggleSplit();
-  if(localStorage.getItem('qwen_hide_on_start')==='1')lockScreen();
+  lockScreen();
 
   // 修复：点击外部关闭菜单，使用正确的 ID
   $('moreBtn').onclick=e=>{e.stopPropagation();$('moreMenu').classList.toggle('show')};
