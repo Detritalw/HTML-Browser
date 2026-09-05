@@ -226,6 +226,12 @@ button:disabled{opacity:.45;cursor:not-allowed}
   </div>
 </aside>
 
+<div class="hidden" aria-hidden="true">
+  <select id="modeSelect"><option value="auto">自动</option><option value="light">浅色</option><option value="dark">深色</option></select>
+  <select id="accentSelect"><option value="blue">蓝</option><option value="purple">紫</option><option value="green">绿</option><option value="orange">橙</option><option value="red">红</option></select>
+  <input id="corsProxy"/><input id="corsProxyKey"/><input type="checkbox" id="proxyModeToggle"/><input type="checkbox" id="sandboxToggle"/>
+</div>
+
 <aside class="drawer settings-drawer hidden" id="settingsPanel">
   <div class="drawer-header"><span id="settingsTitle"></span><button data-close="settingsPanel" class="close-drawer-btn"></button></div>
   <div class="drawer-body">
