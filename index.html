@@ -540,6 +540,7 @@ function init(){
   $('overlayCloseBtn').onclick=hideOverlay;
   matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{if($('modeSelect').value==='auto')applyMode()});
   setMenuBarHidden(localStorage.getItem('qwen_menu_bar_hidden')==='1');
+  lockScreen();
 }
 init();
 </script>
