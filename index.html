@@ -88,6 +88,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .main{position:relative;flex:1;overflow:hidden;z-index:1}
 .main iframe{width:100%;height:100%;border:0;background:#fff;position:absolute;inset:0}
 .main iframe.hidden-frame{display:none!important}
+.menu-bar-hidden .tabs,.menu-bar-hidden .topbar,.menu-bar-hidden .bookmarkbar{display:none!important}.compact-controls{position:fixed;top:12px;right:12px;z-index:10000;display:none;gap:8px;padding:6px;border:1px solid var(--border);border-radius:12px;background:color-mix(in srgb,var(--panel) 88%,transparent);box-shadow:var(--shadow);backdrop-filter:blur(10px)}.menu-bar-hidden .compact-controls{display:flex}.compact-controls button{padding:8px 10px}.compact-controls .hide-now-btn{font-size:13px}
 
 /* Overlay */
 .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--bg) 75%,transparent);backdrop-filter:blur(8px);padding:24px;z-index:30}
@@ -176,6 +177,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <button id="moreBtn" title="更多功能"></button>
     <div class="more-menu" id="moreMenu">
       <button id="goMenuBtn"></button>
+      <button id="hideMenuBarBtn"></button>
       <button id="bookmarkBtn"></button>
       <button id="bookmarkPanelBtn"></button>
       <button id="historyBtn"></button>
@@ -195,6 +197,11 @@ button:disabled{opacity:.45;cursor:not-allowed}
     </div>
   </div>
   <button class="hide-now-btn" id="hideNowBtn" title="隐藏页面"></button>
+</div>
+
+<div class="compact-controls" id="compactControls" aria-label="简洁模式控制">
+  <button id="restoreMenuBarBtn" title="恢复菜单栏"></button>
+  <button class="hide-now-btn" id="compactHideNowBtn" title="隐藏页面"></button>
 </div>
 
 <div class="bookmarkbar hidden" id="bookmarkBar"></div>
@@ -368,9 +375,10 @@ const frameContainer=$('frameContainer');
 const DEFAULT_HIDE_IMAGE='https://img.bloret.net/img/1788607858835/b9692d328d634464dd5f9e369c9840aa';
 let hideLocked=false,hideClickCount=0,hideClickTimer=null;
 function getIcon(name,useAccent=false){const d=ICON_MAP[name]||{name};let c=useAccent?getComputedStyle(document.documentElement).getPropertyValue('--accent').trim():getComputedStyle(document.documentElement).getPropertyValue('--text').trim();return `<img src="${ICON_API}/${d.name}?color=${encodeURIComponent(c)}" class="icon" alt="" draggable="false"/>`}
-function updateAllIcons(){$('hideNowBtn').innerHTML=getIcon('hide')+'HIDENOW';$('backBtn').innerHTML=getIcon('back')+'后退';$('forwardBtn').innerHTML=getIcon('forward')+'前进';$('reloadBtn').innerHTML=getIcon('reload');$('homeBtn').innerHTML=getIcon('home');$('goBtn').innerHTML=getIcon('go',true);$('bookmarkBtn').innerHTML=getIcon('bookmark')+'添加书签';$('historyBtn').innerHTML=getIcon('history')+'历史记录';$('vncBtn').innerHTML=getIcon('vnc')+'VNC 连接';$('moreBtn').innerHTML=getIcon('more');$('toggleBookmarkBarBtn').innerHTML=getIcon('bookmarkBar')+'切换书签栏';const splitOn=frameContainer.classList.contains('split-view');$('splitBtn').innerHTML=getIcon('split')+(splitOn?'关闭分屏':'开启分屏');syncSplitAddresses();$('splitBtn').title=splitOn?'关闭分屏':'开启分屏';$('groupBtn').innerHTML=getIcon('group')+'标签页分组';$('verticalTabsBtn').innerHTML=getIcon('vertical')+(verticalTabs?'关闭垂直标签页':'开启垂直标签页');$('verticalTabsBtn').title=verticalTabs?'关闭垂直标签页':'开启垂直标签页';$('settingsBtn').innerHTML=getIcon('gear')+'设置';$('goMenuBtn').innerHTML=getIcon('go',true)+'前往';$('swapSplitBtn').innerHTML=getIcon('arrow.left.arrow.right');$('splitLeftGo').innerHTML=getIcon('go',true);$('splitRightGo').innerHTML=getIcon('go',true);$('settingsTitle').innerHTML=getIcon('gear',true)+'设置';$('settingsForceRender').innerHTML=getIcon('force')+'强制渲染';$('settingsDiagnose').innerHTML=getIcon('diagnose')+'诊断当前页面';$('settingsHistory').innerHTML=getIcon('history')+'打开浏览历史';$('groupTitle').innerHTML=getIcon('group',true)+'标签页分组';$('createGroupBtn').innerHTML=getIcon('groupAdd',true)+'新建分组';$('copyBtn').innerHTML=getIcon('copy')+'复制链接';$('sourceBtn').innerHTML=getIcon('source')+'查看源代码';$('uaBtn').innerHTML=getIcon('ua')+'User-Agent';$('diagnoseBtn').innerHTML=getIcon('diagnose')+'诊断嵌入';$('forceRenderBtn').innerHTML=getIcon('force')+'强制渲染';$('overlayForceRenderBtn').innerHTML=getIcon('force',true)+'强制渲染';$('sandboxLabel').innerHTML=getIcon('sandbox')+'防跳出模式';$('proxyModeLabel').innerHTML=getIcon('proxy')+'全局代理模式';$('addTabBtn').innerHTML=getIcon('add');$('overlayRetryBtn').innerHTML=getIcon('retry')+'重试';$('overlayOpenNewBtn').innerHTML=getIcon('openNew')+'新窗口打开';$('overlayCopyBtn').innerHTML=getIcon('copy')+'复制链接';$('overlayCloseBtn').innerHTML=getIcon('close')+'关闭';$('overlayTitle').innerHTML=getIcon('info',true)+'提示';$('historyTitle').innerHTML=getIcon('history')+'历史记录';$('clearHistoryBtn').innerHTML=getIcon('clear')+'清空';$('vncTitle').innerHTML=getIcon('vnc')+'VNC 连接';$('vncEncryptLabel').innerHTML=getIcon('encrypt')+'强制加密';$('vncConnectBtn').innerHTML=getIcon('connect',true)+'连接 VNC';$('sourceTitle').innerHTML=getIcon('source')+'源代码';$('uaTitle').innerHTML=getIcon('ua')+'User-Agent';$('uaCopyBtn').innerHTML=getIcon('copy')+'复制自定义 UA';$('uaResetBtn').innerHTML=getIcon('reload')+'重置';document.querySelectorAll('.close-drawer-btn').forEach(b=>{b.innerHTML=getIcon('close')});renderTabs();renderBookmarks();updateBookmarkBtn()}
+function updateAllIcons(){$('hideNowBtn').innerHTML=getIcon('hide')+'HIDENOW';$('backBtn').innerHTML=getIcon('back')+'后退';$('forwardBtn').innerHTML=getIcon('forward')+'前进';$('reloadBtn').innerHTML=getIcon('reload');$('homeBtn').innerHTML=getIcon('home');$('goBtn').innerHTML=getIcon('go',true);$('bookmarkBtn').innerHTML=getIcon('bookmark')+'添加书签';$('historyBtn').innerHTML=getIcon('history')+'历史记录';$('vncBtn').innerHTML=getIcon('vnc')+'VNC 连接';$('moreBtn').innerHTML=getIcon('more');$('toggleBookmarkBarBtn').innerHTML=getIcon('bookmarkBar')+'切换书签栏';const splitOn=frameContainer.classList.contains('split-view');$('splitBtn').innerHTML=getIcon('split')+(splitOn?'关闭分屏':'开启分屏');syncSplitAddresses();$('splitBtn').title=splitOn?'关闭分屏':'开启分屏';$('groupBtn').innerHTML=getIcon('group')+'标签页分组';$('verticalTabsBtn').innerHTML=getIcon('vertical')+(verticalTabs?'关闭垂直标签页':'开启垂直标签页');$('verticalTabsBtn').title=verticalTabs?'关闭垂直标签页':'开启垂直标签页';$('settingsBtn').innerHTML=getIcon('gear')+'设置';$('goMenuBtn').innerHTML=getIcon('go',true)+'前往';$('hideMenuBarBtn').innerHTML=getIcon('chevron')+'隐藏菜单栏';$('restoreMenuBarBtn').innerHTML=getIcon('chevron')+'恢复菜单栏';$('compactHideNowBtn').innerHTML=getIcon('hide')+'HIDENOW';$('swapSplitBtn').innerHTML=getIcon('arrow.left.arrow.right');$('splitLeftGo').innerHTML=getIcon('go',true);$('splitRightGo').innerHTML=getIcon('go',true);$('settingsTitle').innerHTML=getIcon('gear',true)+'设置';$('settingsForceRender').innerHTML=getIcon('force')+'强制渲染';$('settingsDiagnose').innerHTML=getIcon('diagnose')+'诊断当前页面';$('settingsHistory').innerHTML=getIcon('history')+'打开浏览历史';$('groupTitle').innerHTML=getIcon('group',true)+'标签页分组';$('createGroupBtn').innerHTML=getIcon('groupAdd',true)+'新建分组';$('copyBtn').innerHTML=getIcon('copy')+'复制链接';$('sourceBtn').innerHTML=getIcon('source')+'查看源代码';$('uaBtn').innerHTML=getIcon('ua')+'User-Agent';$('diagnoseBtn').innerHTML=getIcon('diagnose')+'诊断嵌入';$('forceRenderBtn').innerHTML=getIcon('force')+'强制渲染';$('overlayForceRenderBtn').innerHTML=getIcon('force',true)+'强制渲染';$('sandboxLabel').innerHTML=getIcon('sandbox')+'防跳出模式';$('proxyModeLabel').innerHTML=getIcon('proxy')+'全局代理模式';$('addTabBtn').innerHTML=getIcon('add');$('overlayRetryBtn').innerHTML=getIcon('retry')+'重试';$('overlayOpenNewBtn').innerHTML=getIcon('openNew')+'新窗口打开';$('overlayCopyBtn').innerHTML=getIcon('copy')+'复制链接';$('overlayCloseBtn').innerHTML=getIcon('close')+'关闭';$('overlayTitle').innerHTML=getIcon('info',true)+'提示';$('historyTitle').innerHTML=getIcon('history')+'历史记录';$('clearHistoryBtn').innerHTML=getIcon('clear')+'清空';$('vncTitle').innerHTML=getIcon('vnc')+'VNC 连接';$('vncEncryptLabel').innerHTML=getIcon('encrypt')+'强制加密';$('vncConnectBtn').innerHTML=getIcon('connect',true)+'连接 VNC';$('sourceTitle').innerHTML=getIcon('source')+'源代码';$('uaTitle').innerHTML=getIcon('ua')+'User-Agent';$('uaCopyBtn').innerHTML=getIcon('copy')+'复制自定义 UA';$('uaResetBtn').innerHTML=getIcon('reload')+'重置';document.querySelectorAll('.close-drawer-btn').forEach(b=>{b.innerHTML=getIcon('close')});renderTabs();renderBookmarks();updateBookmarkBtn()}
 
 const safeParse=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
+function setMenuBarHidden(hidden){document.body.classList.toggle('menu-bar-hidden',hidden);localStorage.setItem('qwen_menu_bar_hidden',hidden?'1':'0');if(!hidden)$('moreMenu').classList.remove('show')}
 const save=()=>{localStorage.setItem('qwen_tabs',JSON.stringify(tabs));localStorage.setItem('qwen_active_tab',activeTabId);localStorage.setItem('qwen_tab_groups',JSON.stringify(tabGroups));localStorage.setItem('qwen_bookmarks',JSON.stringify(bookmarks));localStorage.setItem('qwen_history',JSON.stringify(globalHistory));localStorage.setItem('qwen_mode',$('modeSelect').value);localStorage.setItem('qwen_accent',$('accentSelect').value);localStorage.setItem('qwen_vnc_base',$('vncBase').value);localStorage.setItem('qwen_vnc_host',$('vncHost').value);localStorage.setItem('qwen_vnc_port',$('vncPort').value);localStorage.setItem('qwen_vnc_path',$('vncPath').value);localStorage.setItem('qwen_vnc_encrypt',$('vncEncrypt').checked?'1':'0');localStorage.setItem('qwen_bookmarkbar_hidden',$('bookmarkBar').classList.contains('hidden')?'1':'0');localStorage.setItem('qwen_sandbox',$('sandboxToggle').checked?'1':'0');localStorage.setItem('qwen_cors_proxy',$('corsProxy').value);localStorage.setItem('qwen_cors_proxy_key',$('corsProxyKey').value);localStorage.setItem('qwen_proxy_mode',$('proxyModeToggle').checked?'1':'0');localStorage.setItem('qwen_split_view',frameContainer.classList.contains('split-view')?'1':'0');localStorage.setItem('qwen_vertical_tabs',verticalTabs?'1':'0');localStorage.setItem('qwen_split_tabs',JSON.stringify(splitTabIds))};
 const toast=msg=>{const t=$('toast');t.innerHTML=getIcon('info',true)+msg;t.classList.remove('hidden');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.add('hidden'),2200)};
 const normalizeUrl=input=>{input=String(input||'').trim();if(!input)return HOME;if(/^html:\/\/settings$/i.test(input))return SETTINGS_URL;if(/^(about:|blob:|data:)/i.test(input))return input;if(/^https?:\/\//i.test(input))return input;if(/^[\w-]+(\.[\w-]+)+(:\d+)?(\/.*)?$/i.test(input))return 'https://'+input;return SEARCH+encodeURIComponent(input)};
@@ -496,6 +504,9 @@ function init(){
   $('addressForm').onsubmit=e=>{e.preventDefault();submitAddress()};
   $('goBtn').onclick=submitAddress;
   $('goMenuBtn').onclick=submitAddress;
+  $('hideMenuBarBtn').onclick=()=>setMenuBarHidden(true);
+  $('restoreMenuBarBtn').onclick=()=>setMenuBarHidden(false);
+  $('compactHideNowBtn').onclick=lockScreen;
   $('backBtn').onclick=back;$('forwardBtn').onclick=forward;$('reloadBtn').onclick=reload;
   $('homeBtn').onclick=()=>navigate(HOME);
   $('copyBtn').onclick=async()=>{const t=getActiveTab();if(t){try{await navigator.clipboard.writeText(t.url);toast('已复制')}catch{window.prompt('复制',t.url)}}};
@@ -528,6 +539,7 @@ function init(){
   $('overlayCopyBtn').onclick=$('copyBtn').onclick;
   $('overlayCloseBtn').onclick=hideOverlay;
   matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{if($('modeSelect').value==='auto')applyMode()});
+  setMenuBarHidden(localStorage.getItem('qwen_menu_bar_hidden')==='1');
 }
 init();
 </script>
