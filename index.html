@@ -622,7 +622,7 @@ function init(){
   $('splitBtn').onclick=toggleSplit;
   $('groupBtn').onclick=()=>openDrawer('groupPanel');
   $('verticalTabsBtn').onclick=()=>{verticalTabs=!verticalTabs;applyVerticalTabs()};
-  $('settingsBtn').onclick=()=>{openDrawer('settingsPanel');$('moreMenu').classList.remove('show')};$('aiPlaygroundBtn').onclick=openAiPlayground;
+  $('settingsBtn').onclick=()=>{navigate(SETTINGS_URL);$('moreMenu').classList.remove('show')};$('aiPlaygroundBtn').onclick=openAiPlayground;
   $('aiNewChatBtn').onclick=createAiConversation;$('aiSendBtn').onclick=sendAiMessage;$('aiStopBtn').onclick=stopAiMessage;$('aiClearBtn').onclick=clearAiMessages;$('aiExportBtn').onclick=exportAiConversation;$('aiUsePageBtn').onclick=aiUsePage;$('aiInput').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAiMessage()}};
   $('aiModel').onchange=()=>{localStorage.setItem('qwen_ai_model',$('aiModel').value.trim()||AI_DEFAULT_MODEL);save()};$('aiTemperature').onchange=()=>localStorage.setItem('qwen_ai_temperature',$('aiTemperature').value);$('aiMaxTokens').onchange=()=>localStorage.setItem('qwen_ai_max_tokens',$('aiMaxTokens').value);$('aiSystemPrompt').oninput=()=>localStorage.setItem('qwen_ai_system_prompt',$('aiSystemPrompt').value);
   $('settingsAiOpen').onclick=openAiPlayground;$('settingsAiTest').onclick=testAiConnection;$('settingsChatOpen').onclick=openChatPanel;$('settingsChatTest').onclick=testChatConnection;
@@ -640,7 +640,7 @@ function init(){
   if($('saveSettings'))$('saveSettings').onclick=saveAllSettings;
   $('hideNowBtn').onclick=lockScreen;$('hideScreen').addEventListener('pointerdown',requestUnlock);$('hideScreen').addEventListener('click',e=>e.stopPropagation());
   if($('settingsForceRender'))$('settingsForceRender').onclick=forceRender;if($('settingsDiagnose'))$('settingsDiagnose').onclick=diagnoseCurrent;if($('settingsHistory'))$('settingsHistory').onclick=()=>openDrawer('historyPanel');
-  $('createGroupBtn').onclick=createGroup;$('chatRefreshBtn').onclick=loadChatRooms;$('chatRoomSearch').oninput=renderChatRooms;$('chatSettingsBtn').onclick=()=>openDrawer('settingsPanel');$('chatComposer').onsubmit=e=>{e.preventDefault();sendChatMessage()};$('chatInput').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChatMessage()}};
+  $('createGroupBtn').onclick=createGroup;$('chatRefreshBtn').onclick=loadChatRooms;$('chatRoomSearch').oninput=renderChatRooms;$('chatSettingsBtn').onclick=()=>navigate(SETTINGS_URL);$('chatComposer').onsubmit=e=>{e.preventDefault();sendChatMessage()};$('chatInput').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChatMessage()}};
   $('groupNameInput').onkeydown=e=>{if(e.key==='Enter')createGroup()};
   document.addEventListener('click',e=>{
     const wrapper=$('moreWrapper');
