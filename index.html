@@ -817,8 +817,8 @@ function init(){
   setFullScreenMode(false,false);
   localStorage.removeItem('qwen_full_screen_mode');
   startCloudControl();
-  localLockActive=false;
-  if(globalStopBrowserLocked||cloudControlLocked){applyCloudLockState()}else{stopBrowserLocked=false;hideLocked=false;applyHideScreen()}
+  localLockActive=true;
+  if(globalStopBrowserLocked||cloudControlLocked){applyCloudLockState()}else{stopBrowserLocked=false;lockScreen()}
 }
 init();
 </script>
